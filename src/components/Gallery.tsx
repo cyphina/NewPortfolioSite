@@ -47,8 +47,6 @@ export default function Gallery(props: GalleryProps): JSX.Element {
     setShowGalleryNav(false);
   };
 
-  console.log(imagePaths);
-
   return (
     <div
       class="overflow-hidden w-full flex-col relative"
@@ -66,8 +64,8 @@ export default function Gallery(props: GalleryProps): JSX.Element {
         </button>
       </div>
       <div
-        class="flex pl-1 pr-3 absolute bottom-0 justify-end items-center left-0 bg-opacity-50 bg-black w-full h-32 overflow-x-auto overflow-y-hidden"
-        style={showGalleryNav() ? "opacity: 1" : "opacity: 0"}
+        class="flex pl-1 pr-3 absolute bottom-0 justify-end items-center left-0 w-full h-32 overflow-x-auto overflow-y-hidden"
+        style={showGalleryNav() ? "opacity: 1; scrollbar-color: #131414e1 #13505Be1;" : "opacity: 0"}
       >
         <div class="flex">
           {imagePaths.map((item, index) => (
@@ -94,6 +92,14 @@ export function GameGallery() {
 
 export function ToolsGallery() {
   const images = import.meta.glob("/public/images/ToolImages/*.png", {
+    eager: true,
+  });
+
+  return <Gallery imagesGlob={images} />;
+}
+
+export function ArtworkGallery() {
+  const images = import.meta.glob("/public/images/artwork/*.png", {
     eager: true,
   });
 
