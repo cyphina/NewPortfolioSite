@@ -1,23 +1,28 @@
-import { Title } from "@solidjs/meta";
+import { MetaProvider, Title } from "@solidjs/meta";
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
-import { Suspense } from "solid-js";
 import "./app.css";
+import Navbar from "./components/Navbar";
+import { Suspense } from "solid-js";
+import Footer from "./components/Footer";
+
+const Layout = (props: any) => {
+  return (
+    <>
+      <MetaProvider>
+        <Title>Zi's Blog</Title>
+      </MetaProvider>
+      <Navbar />
+      <Suspense>{props.children}</Suspense>
+      <Footer />
+    </>
+  );
+};
 
 export default function App() {
   return (
-    <>
-      <Router
-        root={(props) => (
-          <main>
-            <a href="/">Index</a>
-            <a href="/about">About</a>
-            <Suspense>{props.children}</Suspense>
-          </main>
-        )}
-      >
-        <FileRoutes />
-      </Router>
-    </>
+    <Router root={Layout}>
+      <FileRoutes />
+    </Router>
   );
 }

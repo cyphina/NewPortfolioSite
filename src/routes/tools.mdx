@@ -1,0 +1,25 @@
+import { ToolsGallery } from "~/components/Gallery";
+
+<main class="m-2">
+
+<div class="m-2 mdx-content">
+
+# Tools
+
+<ToolsGallery />
+
+The most notable tools I made are:
+
+1. All the tooling I made in Unreal which I'll try to post in a gallery here. Stuff like asset creation, editor extension points, some windows made in slate to debug some stuff with triggers and events, etc.
+    1. Asset creation helpers let us fill out forms and create blueprints of the correct C++ base and sets up some boilerplate for asset types as well as creating data assets for the content's associated static data.
+    2. Created many component visualizers including stuff to debug spawners, and stuff to debug actors in the game that spawn only when certain event flags are met.
+    3. Added editor extension points for setting the camera bounds and camera start point associated with a level script, since in this game you need to set the camera to a starting point and also setup how much you can pan the camera for in each level.
+    4. Added customized details panels for certain object types. This helps organize filling out data that's more like an intricate form (e.g., quests).
+    5. Created custom tracks in the sequencer to show/hide the dialog box in tandem with sequence timings and VO.
+    6. Created menus to debug units in the world include testing out their passive/aggressive AI modes and print out information about their behavior tree states and action states.
+    7. Created a custom slate widget to debug information about all the triggers in the world.
+2. UpGPTNoiseFilter which was my app I made to be a faster frontend for ChatGPT with some special features for storywriting like being the app parsing a story written in a specific markdown note format and helping you generate keywords which you can reuse in your prompts. The app would optimize not resending the entire summaries associated with keywords unless those summaries fall outside the context window.
+3. My old dialog tool. Made in WPF and C#. I stopped using it cause I eventually integrated [https://github.com/NotYetGames/DlgSystem](this dialog tool).
+
+</div>
+</main>
