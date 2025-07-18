@@ -1,4 +1,4 @@
-import { createSignal, For, JSX } from "solid-js";
+import { createSignal, For, JSX, onCleanup, onMount } from "solid-js";
 
 interface GalleryProps {
   // at build time grab every file in this folder that matches this pattern and make them accessible to me on a map.
@@ -9,6 +9,8 @@ export default function Gallery(props: GalleryProps): JSX.Element {
   const [curImgIndex, setCurImgIndex] = createSignal(0);
   const [showModal, setShowModal] = createSignal(false);
   const [showGalleryNav, setShowGalleryNav] = createSignal(false);
+
+  let galleryContainerRef!: HTMLDivElement;
 
   const slides = [];
 
@@ -23,6 +25,16 @@ export default function Gallery(props: GalleryProps): JSX.Element {
     }
     return "";
   };
+
+  onMount(() => {
+    const onClick = (e: MouseEvent) => {
+      if (!galleryContainerRef.contains(e.target as Node)) {
+        setShowGalleryNav(false);
+      }
+    };
+    document.addEventListener("click", onClick);
+    onCleanup(() => document.removeEventListener("click", onClick));
+  });
 
   // SolidJS sets up one listener in the document or window and when you click anything the global
   // listener receives the event.
@@ -39,43 +51,55 @@ export default function Gallery(props: GalleryProps): JSX.Element {
     setCurImgIndex(data);
   };
 
-  const onMouseEnter = (_data: any, _event: Event) => {
+  const onPointerDown = (_data: any, _event: Event) => {
     setShowGalleryNav(true);
   };
 
-  const onMouseLeave = (_data: any, _event: Event) => {
+  const onPointerUp = (_data: any, _event: Event) => {
     setShowGalleryNav(false);
   };
 
   return (
-    <div
-      class="overflow-hidden w-full flex-col relative"
-      onMouseEnter={[onMouseEnter, undefined]}
-      onMouseLeave={[onMouseLeave, undefined]}
-    >
-      <div style="height: 32rem">
-        <button class="" onClick={[onGalleryClicked, undefined]}>
-          <img
-            src={imagePath()}
-            alt="Missing"
-            class="object-cover h-full w-full"
-            loading="lazy"
-          />
-        </button>
-      </div>
+    <div class="flex flex-col">
       <div
-        class="flex pl-1 pr-3 absolute bottom-0 justify-end items-center left-0 w-full h-32 overflow-x-auto overflow-y-hidden"
-        style={showGalleryNav() ? "opacity: 1; scrollbar-color: #131414e1 #13505Be1;" : "opacity: 0"}
+        class="overflow-hidden relative"
+        onPointerDown={[onPointerDown, undefined]}
+        ref={galleryContainerRef}
       >
-        <div class="flex">
-          {imagePaths.map((item, index) => (
+        <div>
+          <button class="" onClick={[onGalleryClicked, undefined]}>
             <img
-              onClick={[onNavBarItemClicked, index]}
-              src={item}
+              src={imagePath()}
               alt="Missing"
-              class="object-cover h-24 w-40 mx-2 cursor-pointer hover:opacity-75"
+              class="object-cover h-full w-full"
+              loading="lazy"
             />
-          ))}
+          </button>
+        </div>
+        <div
+          class="flex pl-1 pr-3 absolute bottom-0 justify-end items-center left-0 w-full h-1/5 overflow-x-auto overflow-y-hidden"
+          style={
+            showGalleryNav()
+              ? "opacity: 1; scrollbar-color: #131414e1 #13505Be1;"
+              : "opacity: 0"
+          }
+        >
+          <div class="flex h-full">
+            {imagePaths.map((item, index) => (
+              <img
+                onClick={[onNavBarItemClicked, index]}
+                src={item}
+                alt="Missing"
+                class="object-cover mx-2 cursor-pointer hover:opacity-75"
+                style="width: 1/4vw"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div class="mt-1 mb-4 mx-8 border-solid border border-gray-800">
+        <div class="text-center text-sm m-1">
+          Click on the Gallery to see a navigation bar that can let you change the Picture. Sliding might be a bit awkward on mobile.
         </div>
       </div>
     </div>

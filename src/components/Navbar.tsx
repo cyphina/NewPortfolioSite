@@ -40,7 +40,7 @@ export default function Navbar(): JSX.Element {
 
   return (
     <header>
-      <nav class="flex gap-2 justify-center w-full h-20 pl-2 justify-between bg-black items-center text-gray-600">
+      <nav class="flex gap-2 flex-wrap justify-center w-full h-20 pl-2 justify-between bg-black items-center text-gray-600">
         <Logo />
         <Tabs items={items} />
       </nav>

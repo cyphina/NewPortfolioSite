@@ -1,4 +1,52 @@
 import Main from "~/components/Main";
 import { createSignal } from "solid-js";
 
+<main class="m-2">
+
+<div class="m-2 mdx-content">
+
+# Unbounded Perceptions 
+        
+## Welcome to my Site!
+
 <Main />
+
+Hi it's Zi here. Welcome to my side I made with Solid-Start and MDX. 
+
+Thanks to my pal Asim for teaching me how to make the site look ok in mobile. There's definitely more work to do but uhh yeah I have to like also do my own projects, study, take care of people, ya know everything you probably do better than me.
+
+I've been working on one game solo
+for the last around seven years (mostly in my free time after work and
+on weekends). The concept you can see in the game section, but it's inspired by stuff like ORPGs in WC3 and Siltbreaker in Dota.
+
+The thing I'm most proud of in the game are the systems and the tooling to build gameplay. I'm not going to lie, the only reason I was able to program this much is cause
+my brain is shut off half the time. I worked 8+ hours at my last job working on UI frameworks for an MMO, and then I took a nap for an hour or two then went back to work on the game.
+
+The key was I just kept watching stuff in the background. Other game documentaries, or sometimes just funny streams. That's why I built a lot of tools for debugging the game at various points cause you know I'm not going to have the attention to replay tons of steps back to solve a problem. And most of the asset creation pipeline is me making custom editor widgets to fill out forms with decent validation instead of creating new blueprints and stuff.
+
+Despite working on the game it's also not like I don't play games myself, I think I'm still pretty good at Dota 2 and play a decent amount of PVE custom games so I think I know what a good combat system is and how to troll people.
+
+I guess it's a good time to introduce my objectives with this game. I don't really care about making money with it, but I do want to:
+
+1. Make a game I would like to play one day
+2. Tell an interesting story that portrays some interesting perspectives on the world and hopefully boosts the creative IQ of someone who plays. Something like [Despiria](https://youtu.be/de-8Vz5Ng0A?si=nC69ojDE1z9fNgi-).
+    1. The story is episodic so we had to build some systems to kind of make levels dynamic. You visit a level for a "reason" and based on that "reason" the level changes how it looks. The reasons are things like ok well this place was visited by Bob at like Tuesday. Then you can revisit some place from Joe's perspective on like Saturday.
+    2. That whole system is tied together through the level picking system that was influenced by devil survivor.
+
+<img src="images/sidebyside.png" alt="side by side comparison with devil survivor"/>
+
+3. Really make the player suffer and troll them cause in Dota 2 you see people going OP builds too much in PVE. 
+    1. I want to leverage what I've seen there and make sure all types of players will suffer cause it'll be funny.
+    2. But honestly I want people to have to be creative in their gameplay too instead of just playing some ranged carry shooting from the backline or just kiting everything with spells.
+4. Be able to make every single interaction in Dota 2. But have a nicer way to build all the content needed for a PVE mode.
+    1. I'd say I've managed to succeed in this front. Cause my scope is larger than Siltbreaker in terms of what our game can provide from a PVE standpoint, but it's also like the scope of the overall game is smaller since I built it in a way such that it's easier to create things but you don't have the flexiblity of like having enemies in multiple teams (at least not as easily).
+        1. For example AI logic in Dota is like a loop written in Lua. I really worked hard to setup nodes for our system to do things like follow players when you run out of vision all while minimizing the number of nodes you use in the graph. There are also custom nodes to react to events and break out of the traditional looping logic of the behavior tree or transition to new trees.
+
+By the way, the background for this
+site is made by a Japanese artist known as AriDuka. If the page is large
+enough, you can see the artist's id, but here's a link to their page:
+[AriDuka's Twitter](https://twitter.com/13033303?lang=en)
+
+</div>
+
+</main> 
