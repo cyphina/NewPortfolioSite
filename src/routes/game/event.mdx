@@ -1,0 +1,95 @@
+<main>
+<div class="m-2 mdx-content">
+
+# Data Driven Primitives and Event Flags
+
+## Problemo
+
+When building gameplay systems, one of the biggest sources of friction is hardcoded logic - especially when that logic is meant to change often, or be reused across different parts of the game.
+
+Say you want a hero to level up when they touch a statue. Easy: write a Blueprint or a bit of code to do that. But now you want a different statue to play a cutscene instead. Suddenly, you're duplicating logic, branching code paths, or creating a new “statue variant” just to handle one-off behavior. Multiply that across dozens of interactables, quests, and conditional triggers, and your project becomes a maze of special cases and brittle scripting.
+
+## Solution
+
+Before we get into the solution I want to talk a bit about the history of me witnessing people's attempt to solve this problem in various level editors.
+
+When I was a kid messing around with level editors in games like Heroes of Might and Magic III or Plazma Burst 2, I remember running into these clunky, powerful trigger systems. They let you define logic through data—"when unit dies, open door" kind of stuff. It was all a bit... error prone. You would typing IDs into text fields for the trigger type. You'd then pass in parameters in some order that was described in a manual, and then hope it would work. There was no type safety, no UI feedback—just pure trial and error. But somehow, it worked. People made legendary maps in those games.
+
+Fast-forward to working in Unreal, I found myself building similar systems—trying to create ways for designers or content editors to set up gameplay logic without having to write Blueprint or code. My first attempt looked exactly like what I’d seen as a kid: I had a struct called `FTriggerStruct`, an enum called `ETriggerType`, and a custom details panel that showed or hid fields depending on what type of trigger you picked. It worked, but it was brittle. Every new trigger required a new `ETriggerType` entry, more if statements, and more complexity in the editor UI.
+
+Then I discovered the better way: just use instanced UObjects.
+
+Unreal’s editor does the heavy lifting for you. If you expose a UObject pointer as EditInlineNew, the engine gives you a clean, expandable UI for each derived type. That means instead of stuffing logic into enums and switch statements, I could define a base class like `URTSTrigger`, and then implement individual triggers as subclasses. Each one had its own data, its own behavior, and its own editor UI—for free.
+
+## Data Driven Primitives
+
+The most common bits of logic I use when building my game is stuff like:
+
+1. When this happens do this.
+2. If this condition is true, trigger that.
+3. Listen for this event, and then respond in this way.
+
+This is what data **driven primitives** do for you. We have primitives like `URTSTrigger`, `URTSConditional`, and `URTSEvent` to be able to write logic in specific parts of a larger system for those aforementioned bits but by filling out the details of those UObjects.
+
+And ofc you can use the composite pattern to chain sequences of them and for events you can setup like dependency chains if you have things like URTSEventSequence with some combination logic like `Sequential` (observe events in a sequence in order when they are all done run logic), `SequqentialOR` (run logic when if at least one event is satisfied), or `SequentialAND` (run logic when all events are satisfied).
+
+## Example
+
+I've selected a trigger plate that when you walk over should do something.
+
+Instead of having to go into blueprints, you can see in the details panel we can pick one of the many condition types to do a check if it is stepped on by the great heroine Ari Shizuka.
+
+Then the trigger that picked which adds an item to some hero's backpack or spawns a pickup will activate.
+
+<img src="../images/GameImagesInline/TriggerConditionalExample.png" alt="Trigger Conditional Example"/>
+
+For this image I have a spawner. And I have an `RTSEvent` that controls when we start spawning enemies. This example will only spawn enemies if some hero in the party uses some item.
+
+<img src="../images/GameImagesInline/SpawnerEvent.png" alt="Spawn Event Example"/>
+
+## Event Flags
+
+This is the final technique I'll showcase.
+
+The problem is for a game we need to store a lot of flags typically recording the progress of the player and what events they've completed in the world.
+
+Think of like a game like Legend of Zelda Link to the Past. There's a bunch of flags which are set when you kill bosses or collect items. And then when someone builds something like the [randomizer](https://alttpr.com/en) that involves randomizing what items you get in chests. But you need to be careful that you don't accidentally place items necessary for completing to the in places that would be impossible to collect. For example if you have the hammer in a chest that you can only access if you have a bow, but then have the bow in a chest you can only access the hammer, then it may be impossible to complete the game (without glitches and stuff).
+
+So in my game we store all these flags in a system known as **event flags**.
+
+It's just a gameplay tag container. Pretty standard stuff - you store a gameplay tag container with a bunch of gameplay tags indicating things like what quest you completed, what bosses you killed.
+
+There are also dynamic flags where you only get a certain event flag if you visit a level for a specific quest.
+
+The interesting thing I built on top of the system is the debugger, and the event flag component.
+
+If you want to spawn something dynamically, you use the event flag component which will run a gameplay tag query against the tags in your container to control whether something is spawned in and out of the map. 
+
+There's also a custom event flag component that runs some logic based on if the gameplay tag query provided is satisfied which lets you control something besides spawning.
+
+<img src="../images/GameImagesInline/EventFlagEnabler.png" alt="Event Flag Enabler"/>
+
+In this picture we have a barrier that is only active when a certain gameplay tag query is satisfied, aka when the player hasn't completed a certain quest.
+
+I have a custom component visualizer to draw the gameplay tag name on the screen for any objects with this event flag component.
+
+And ofc since we're using `RTSEvents` under the hood you can set this logic up without touching any scripts!
+
+### Event Flag Debugger
+
+The final piece of the puzzle is the event flag debugger which is a tool I made that shows you the active event flags and lets you simulate activating and deactivating flags.
+
+You can even simulate how a level looks like with event flags in the editor:
+
+<img src="../images/GameImagesInline/EventFlagOn.png" alt="Event Flag On"/>
+
+That image shows the event flag debugger in editor mode meaning if there's something that requires an event flag to be seen it shows up in the editor if you have the event flags set in the tool that match the event flag query.
+
+<img src="../images/GameImagesInline/EventFlagOff.png" alt="Event Flag Off"/>
+
+Else if you turn off event flags it goes away.
+
+</div>
+
+
+</main>

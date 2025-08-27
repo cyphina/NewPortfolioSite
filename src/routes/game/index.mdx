@@ -1,0 +1,139 @@
+import { GameGallery } from "~/components/Gallery";
+import App from '../../app';
+import { A } from "@solidjs/router";
+
+<main class="m-6">
+    <div class="m-2 mdx-content">
+        # Game
+    
+        ## Overview
+
+This page is about all the gameplay features I designed and developed for the game.
+
+        ## History
+
+I started game dev working through these tutorial series maybe 10 years ago?
+
+        1. [Visual Basic Game Tutorials](https://www.youtube.com/user/Aardaerimus) - this youtube channel Aardaerimus is where I started it all
+        2. [Unity RTS Tutorial](http://www.stormtek.geek.nz/) - This is the tutorial that I did in high school that started the Unbounded Perceptions journey after Visual Basic.
+        3. [First Unreal Tutorial](https://www.youtube.com/watch?v=aipoAphfAN8) - This is the first tutorial I watched in UE4
+
+And my game nowadays still built upon that same RTS tutorial project. I migrated my game all the way from 4.12 to 5.6 over the years. I think around version 5.1 is when I started to just build Unreal from source since I wanted to use Unreal-Engine AngelScript to learn more about AngelScript syntax since we used it in my last job, granted that was in a custom game engine.
+
+    ## What is the core game loop of Up?
+
+    The loop is typically you get some quest.
+
+    Main storyline quests are given to you automatically as you complete the previous ones.
+
+    There's also sidequests that you can unlock by doing stuff in the world like talking to people.
+
+    The player can choose what quest to partake in. But at the very start of the game you're forced into a level and you follow the instructions of the main story quest.
+
+    It's probably easier to understand by seeing how the first part of the game is played.
+
+    <img src="images/GameImagesInline/GameStarting.png" alt="start of the game"/>
+
+    Follow the quest tracker and go to the first location to trigger a cutscene. Then follow the tracker to the elder and talk to him, then talk to a few more NPCs before returning back to the place where you started to complete this quest.
+
+    >If you're curious the story behind the beginning is you play as Horola (her) who is actually a divine being Divine Chaos pretending to be an innocent traveler which is why you have this level 5 character at the start. She's trying to enter this quarry nearby the village to look for an artifact known as the mirage gem but the village elder is a legendary magician who sealed the entrance to prevent monsters from escaping the quarry. Divine Chaos decides she doesn't want to like start a commotion and ends up pretending like she needs the gem to help someone and the villagers agree to open the barrier and get it for her. Meanwhile they ask Divine Chaos to do some favors for them so she goes around helping them out, but when night comes and the village creates a party of really powerful people to enter the quarry they end up sealing themselves in to prevent monsters from accidentally escaping to the village. Divine Chaos grows impatient when them and eventually punches this legendary barrier down because while the people in this village are super strong compared to normal people, DivineChaos is godlike which you get to witness when you get control of a level 300 character.
+
+    ### World Map
+
+    So after you complete the last goal in the quest a dialog plays and then you're taken back to the world map which also acts as a playground.
+
+    From the world map you typically pick what quest you're trying to progress in. I'll go into more detail in the quest system and how it's organized in a bit just know that you have a list of locations and then you can click on one and see all the quests you have available at that location. There's also other things listed in a location like side quests and eventually an option to free roam that location outside of the context of a quest.
+    
+    <img src="images/GameImagesInline/WorldMap.png" alt="world map"/>
+
+    >I'll talk more about the world map later but it also acts as a playground. Players can spawn the enemies they've come across, heroes they've unlocked, and items they've collected to try and test out some combat combinations or something.
+
+    <img src="images/GameImagesInline/WorldMapPlayground.png" alt="world map playground"/>
+
+    So next the player would pick the location for the main quest and choose that they're going there for the main quest. This is the whole multiplayer aspect of the game that's still being fleshed out. When you pick going to a location typically there are some rules based on the quest what party members are available, and you would divy them up between multiple players.
+
+    <img src="images/GameImagesInline/PartyPicker.png" alt="party picker"/>
+
+    ### Locational Setup
+
+    Every time you pick to travel to some kind of destination for a reason (for a quest, or free roaming) there's some contextual stuff setup. So the first level is called Everna. You spawn near the beach at the start of the game. But there's metadata setup for each quest that has some information like ok well when you visit this location for this quest, you can spawn in a different location and we'll setup some flags so parts of the level can react to those flags being set and know hey I should look different for this scenario:
+
+    So it ends up looking like this once you pick to go back to Everna to continue the main quest:
+
+    <img src="images/GameImagesInline/EvernaReturn.png" alt="return to everna"/>
+
+    That's the jist of the game. Plays like a RTS in the sense that you have this top down game where you control up to 4 heroes which can summon more units. And you do quests which involve fighting enemies, solving puzzles, etc.
+
+    You get stronger with your heroes since the XP they gain is saved as you return back to the world map or if you complete a quest objective. Then if the next quest you do reuses that hero you have all that progress you made rolled over so you can still grind in this game - it's incentivized cause enemies might have some rare drops that might be useful for certain battles.
+
+    But for some quests  you might get like a new hero that might only be used for a certain quest. That's basically a sign that hey you need to really adjust your playstyle for this mission cause you're going to have to learn to leverage this hero who might have some niche ability.
+
+    ## Features
+
+    Here we'll link pages to some writeups about the different features I made.
+
+    * <A href="/game/event">Data Driven Primitives and Event Flags - Data Driven Approach to Dynamic Levels</A>
+    * <A href="/game/items">Item System - Relational Tables</A>
+    * <A href="/game/quests">Quest System - Custom Details versus Quest Graph</A>
+    * <A href="/game/assetCreation">Asset Creation - AngelScript Editor Widget</A>
+    * <A href="/game/characterMovement">Character Movement - Flocking, Custom Movement Component and Interactable Use Positioning</A>
+    * <A href="/game/dialog">Dialog Systems in Multiplayer</A>
+    * <A href="/game/multiplayer">Refactoring a Single Player Game to Multiplayer</A>
+    * <A href="/game/spells">Spell System - Using GAS but not Prediction</A>
+
+    ## Videos
+
+    These might be better suited in some specific section links but for now I'm going to just drop some videos of systems here.
+
+    Here's a video I made of the main gameplay features.
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/mkyvwwd0gbQ?si=PpTe-5lWkkV9c_H1"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+
+    Here's a video I made on the spell system intricacies. I didn't go talk about GAS too much - I just pretty much built on top of the Github GAS guide and I didn't want to go over my extensions but just give a higher level overview of what was achieved.
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/wndKvjxAEjI?si=ehfc0m3hltuEMJck"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+
+    Here's a video I made on what it looks like to make AI for the game.
+
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/Mau5OGr4ra4?si=ypiAkJmFMqhBxDCT"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+  referrerpolicy="strict-origin-when-cross-origin"
+  allowfullscreen
+></iframe>
+
+    Here's a gallery of a few pictures of the game.
+
+    <p class="text-center">
+        The gallery may take some time to load...
+    </p>
+
+    <div class="mt-1 mb-4 mx-8 border-solid border border-gray-200">
+        <GameGallery/>
+    </div>
+
+    </div>
+
+</main>
