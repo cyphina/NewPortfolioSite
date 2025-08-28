@@ -3,5 +3,108 @@
 
 # Vision
 
+## Overview
+
+Up has a vision system like Dota 2, WC3, or SC2 but it's built a bit differently due a few constraints.
+
+Vision is used to layer encounters within the map. There might be enemies scattered throughout the map, possibly patrolling area, but only enemies with vision over you will start being aggressive.
+
+And enemies will only target units they have vision over.
+
+## System Constraints
+
+I believe that in games like Dota2 or WC3 visibility is based on some kind of precomputed grid that's made during a build step. That's why those games tend to operate with a single large map, granted the exception to this rule is Agh's labyrinth but even that seems to have one large map. My assumption is based on the Aghs' Labyrinth 2025 where you can literally walk backwards from the end to the start and you can even pan your camera from room 10 to room 1 which I assume means it's always loaded.
+
+Since visibility data is baked in the map, the games can optimize around that assumption. But it also means you're not going to be able to stream a new region on the fly an expect visibility calculations to follow.
+
+In Unbounded Perceptions we instead do LOS calculations and draw the vision effect at runtime (using the [2D visibility algorithm](https://www.redblobgames.com/articles/visibility/)).
+
+## Implementation
+
+The vision system runs line traces on another thread between enemy and ally units (since our game is PVE it's limited to those two teams).
+
+To prune the candidates we have a vision sphere collider we use to track nearby enemies and allies and limit the line traces to enemies that have been overlapped and are not invisible (unless you have some form of invisibility detection). This means that set of units we have in visibility range is protected via reader-writer lock.
+
+Now I'll go into the steps of implementing the system.
+
+1. Collecting Live Unit Data on the Vision Thread
+
+We have to pull the list of enemies and allies from the game thread in a safe way so we're using a reader writer lock when accessing this list in case other game systems are accessing this data as well. Honestly not many are to prevent contention and also most systems just end up using the visible enemy and ally list which this system generates.
+
+We end up storing a list of weak pointers to actors for each unit. The reason is explained in a few steps. And we're making a shallow copy of the list of enemies and allies to prevent having to lock the data for more than the copy operation.
+
+>In the steps if I mention enemy I'm talking about relative to each unit. There's two teams in the game - player's units, an ai units that are hostile to player. Sometimes I refer to that as enemies but from now on if I refer to enemy I just mean relative to both groups.
+
+2. Spatial Filtering 
+
+As I mentioned previously each unit has a vision radius sphere component which we collect overlapping enemies within that radius using overlap events and a reader writer lock on the set since the vision thread also uses this set too in a later step. The goal is to prevent having to do line traces on every actor in the world and leverage the spatial spatial indexing that underpins Unreal physics system instead of rolling out my own quadtree or trying to learn the API of the one Unreal provides.
+
+3. LOS Checks 
+
+For every unit we do our checks on the weak pointer to make sure it's still valid. 
+
+I've gotten away without doing this cause we have a 5 second delay when units die since we use `SetLifespan(5.f)` but to make the system more stable and less reliant on that it's best to check if it's valid to make sure if somehow it's destroyed between the process of copying the previous step and the start of the LOS checks we use the weak pointer `IsValid(false, true)` check for thread safe checking and also for checking if the unit is pending kill.
+
+Units are destroyed on a delay so most often your `IsValid()` check can catch if something is being destroyed and then you have the `TWeakPointer` `IsValid()` to check if the pointer is valid. We need similar validity checks for the enemy we're checking if we have vision over.
+
+We eventually lock the set of enemies in the vision sphere and do a line trace from the unit to each enemy. We store the list of hit enemies since we need to figure out what enemies were visible last frame to know to update the ones that are no longer visible.
+
+>I think technically reading the positions we use for the line trace is not thread-safe. The transform data can be modified on the main thread (like the transform being written to every frame during movement) and reading it off-thread could in rare cases result in corrupted or inconsistent values from tearing. That said I haven't' seen any problems in practice even when we have a lot of units moving around, and teleporting.
+>
+>I'd guess I have't seen problems and the system seems fair is cause vision checks could fire one frame early or late from the tearing since typically units aren't teleporting around a lot and maybe we're reading values that are off by a bit since we're reading a partially updated value. And position updates are small frame to frame and large jumps are rare but this might make us be off for a frame meaning you might see a unit pop in on a delay or go out of vision ona slight delay. If this ever becomes a huge problem we'll revisit this but I think it's a good tradeoff compared to having to somehow get the positional data safely to the vision thread.
+>
+>Also to prevent someone from screwing themselves I'll mention in the game the vision system updates at a fixed interval - the thread runs these steps and then sleeps for 0.1s.
+
+4. Update Vision Results 
+
+For allied unit vision, there's only one rule. All units the player units control share vision.
+
+When updating visibility results, we check for each hostile AI unit that we line traced:
+
+1. If we hit the hostile AI unit and avoided all vision blockers, we check if it was not in the visibility list from last check. If it's not in the visibility list, we need to set an atomic `hidden` bool on it to true.
+2. If the line trace hit a vision blocker we check if the hostile AI unit was in the visibility list from last check. If it is in the list, we need to set the atomic `hidden` bool to false.
+
+We do the same thing for enemies. But then there's some extra bookkeeping since we need to create some extra visibility lists since for enemies:
+
+1. They can share vision between a group.
+2. They can have individual vision.
+3. They can have global vision (always see you for the ultimate anti-cheese).
+
+The vision system calculates the lists such that you can figure out what units a group has visibility over or what units a single enemy has visibility over.
+
+We build out this data storing lists of who has vision over what, and we even have to do some vision ref counting for groups. Imagine you have a few enemies in a group and then one enemy stops seeing this player controlled unit. We have to see if that was the last enemy that had vision over the player controlled unit and then remove it from the bookkeeping. 
+
+5. Propagate Visibility 
+
+We have to run the actually visibility changing logic in the main thread in the tick for each unit which polls the atomic bool and has some other rules I'll mention in edge cases.
+
+6. Clean up/Invalidate Dead Units
+
+The vision thread has a message queue. The main thread uses it to communicate to the vision thread about when units die so we can clean up the bookkeeping for groups and individual units.
+
+7. Exposing Results to Gameplay Systems
+
+Periodically the main thread will access the bookkeeping of the vision thread to get that group and individual data used by AI. We lock the bookkeeping data for reading and then copy it over to the main thread.
+
+It's not always frame perfect but it's consistent and performant.
+
+## Level Streaming
+
+Currently in the game we can seamless travel between worlds and soemtimes stream levels in and out typically in pairs. This is unlike a WC3 ORPG where everything is loaded and when you go to a dungeon you just get teleported to it.
+
+When either of these things happens we stop the vision thread, let the message queue handle removing of previous results for units that got destroyed and then restart the thread again once the streamed level finishes loading.
+
+This is just an extra layer of safety against accessing dangling pointers alongside the weak pointers and delayed unit destruction while the main thread settles ownership stuff. Then we can resume processing in a stable state.
+
+## Edge Cases
+
+To prevent super hit and run tactics where the player can hit an enemy then run behind a vision blocker or to prevent enemies sniping players with long range attacks we have a few extra rules to the vision system.
+
+If a unit attacks another unit on the enemy team then the enemy will give vision over that unit and share it with whatever group its in.
+
+If a unit heals a unit being attacked the healer will be granted vision to the attacker so you don't have a super healer build that camps in the shadows.
+
+We call units that are seen this way "exposed".
+
 </div>
 </main>
