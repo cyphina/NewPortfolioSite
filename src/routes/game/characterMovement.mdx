@@ -1,0 +1,64 @@
+<main>
+<div class="m-2 mdx-content">
+
+# Character Movement
+
+## Overview
+
+In this section I'll talk about some systems I built to handle edge cases with movement. 90+% of the movement logic is just stuff Unreal provides out of the box - particularly your standard `AAIController::MoveToLocation` and `AAIController::MoveToActor`.
+
+## Unit Clusters
+
+When you tell multiple units to move to the same location in an RTS, what should happen?
+
+Some games where you move multiple units just keep them in formation. There's actually an option to do that in my game too but I wanted to emulate Dota 2 where every unit attempts to move towards the target location not to some location relative to the unit's position in the formation (that's not completely true I do add a little offset to declump but we don't target the exact position in the formation).
+
+Now if you did this with the base movement behavior in Unreal, you'd end up getting a super clump where all units fight to get to the target location and sometimes end up permanently bumping into each other like a traffic jam. But in Dota 2 units might fight to get closer but eventually units squeeze their way close to the target location.
+
+Also the default behavior causes units to move like in a giant clumped ball which feels kind of weird since in real life even if you're going towards the same destination you want to spread out a bit for personal space.
+
+I think strategy games typically handle this by using flocking which is what I did. I'm not going to talk about how to implement it since I just followed the tutorials from [the coding train](https://www.youtube.com/c/TheCodingTrain/videos). But I want to talk about where to implement it in Unreal.
+
+The place I added the flocking logic was to my custom `UPathFollowingComponent` code. You get the target location direction, and then we use that as the input to the flocking algorithm (calculating separation, alignment, and cohesion based on the units around).
+
+I already had the information about the nearby units since I track this information as part of my vision system. That system requires us to track all units that go within vision range to do some calculations on it and the whole vision sphere candidates runs on overlaps which inherently uses the spatial partitioning of the physics system.
+
+Once you have the final augmented velocity direction you just call `RequestDirectMove`. You might also need to override `OnActorBump` to help bump units around a bit to help make the fight for the target destination look more natural and prevent the "settling" behavior from taking forever. I also override it cause I wanted to add a mechanic where you could push stunned units out of the way of a devastating attack.
+
+>Since the weights are fudge factors it might help to create an editor widget or some console commands to be able to tune those values in game.
+
+## Interactable Interact Locations
+
+In my game there are some interactables where you can specify a unit to move to a certain point before using it. It's kind of like the sims - move towards the front of the sink then use it.
+
+But there are also situations in which you can interact from something from any direction. Like a button you would press - you don't have to always walk in front.
+
+Now you might think ok let's use `MoveToActor` on the button. But I've found that `MoveToActor` treats the target's location as the end point. If that target actor is not navigatable (aka marked `bCanEverAffectNavigation=false`) it  projects to some point on the navmesh that's closest and that becomes the target location. This means it won't target the center of said actor, and sometimes this leads to us not going to take the shortest path generally to tha actor.
+
+>I'm no navigation expert but the system can also not take the shortest path sometimes just due to navmesh precision which depends on cell size and the shapes of the obstacles which can affect how the navmesh geometry is generated.
+
+The adjustment I made in my game is that I setup a system is there's an option for these interactables where you can setup the target point to walk to be calculated by testing the four points on the side of the bounding box of the interactable target plus a target point found by tracing a line from the unit to the interactable. We end up testing all these points and checking the path cost. We then project the point back to the navmesh just in case our target actor might be partially outside it and then walk to that point.
+
+## Movement Abilities
+
+The only other form of unit movement we have outside of the move functionality in `AAIController` are abilities that move units by applying forces.
+
+There's two main examples I have currently in the game. The first one is actually two things - we have a spell force pull and another is force shot which ends up shooting a bullet that pushes a unit away.
+
+Those examples utilize `LaunchCharacter`, particularly I have a custom movement interface that lets us launch character and non-character type units since we have two classes of units:
+
+* AUnit - Can use many static meshes, rely on colliders on the static mesh. You could add colliding components as well if you need them and want to disable parts of collision or if you're not happy with the mesh's collision options.
+* ACharacterUnit - Derives from `ACharacter` and you have to use a skeletal mesh and capsule collider or the physics asset colliders for complex traces.
+
+>Common functionality is in an `IBaseUnit` interface.
+
+That kind of movement ignores mass. But we also have another movement tech for spells like `Up_Spell_RapidSpinner`. That spell is supposed to be my attempt to create a system that would emulate Dota 2's phoenix dive.
+
+That system requires creating a custom ability task (to run ticking logic) that applies force to a unit along a spline. And ofc if the unit gets stunned, if the user cancels the ability, or if the spin time runs out we have to stop the whole ability.
+
+This is what a portion of the blueprint looks like (the part I'm talking about). The only part not visible is the part where I apply a damage effect to all units within a the AOE.
+
+<img src="../images/GameImagesInline/RapidSpinner.png" alt="Rapid Spinner"/>
+
+</div>
+</main>

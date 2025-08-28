@@ -1,0 +1,172 @@
+import { A } from "@solidjs/router";
+
+<main>
+<div class="m-2 mdx-content">
+
+# AI
+
+## Motivation
+
+When designing AI systems for my game, I started with the question, what does it take to build the same kind of enemies you'd see in games with similar combat systems that I was inspired by:
+
+- Dota 2's PVE modes - like Aghanim's Labyrinth
+- WC3 ORPGs. Particularly stuff from custom games like [impossible bosses](https://impossiblebosses-wc3.fandom.com/wiki/Bosses).
+- Monster Hunter Type Games (not exactly similar but I always enjoyed boss battles in these games and we can bring similar concepts).
+
+While these games are similar a lot of boss battles in these games come down to dodging attacks. But Unbounded Perceptions is different cause every spell has an incantation time to slow down the pace and focus more on trying to react properly, a little bit like a turn based RPG mixed with a real-time game.
+
+**But the jist of AI is similar - you have enemies that need to:**
+
+- Target things based on the targeting rules of the action they want to take.
+- Auto attack
+- Cast spells
+- Move around the map sometimes to make players have to chase enemies down.
+- React when they have low hp.
+- Transition to different behaviors based on thresholds (boss phases).
+- Handle interrupts during AI overrides like stuns, fears, taunts, etc.
+- Conditional behaviors based on player state
+- And more.
+
+Most smaller encounters are pretty tame. You fight enemies that might have one or two abilities that need specific counterplay but typically most enemies you can beat out by kiting. That's the situation in Dota 2's dark moon and aghs labyrinth.
+
+When you lose to those basic enemy encounters it's usually because most teams are uncoordinated and they flood you with enemies so if you don't kite together you're screwed. But if you do you kind of have the solution to almost every battle.
+
+That's another benefit of the incantation system in Unbounded Perceptions - since spells take some time you can't always get away with using spells and running away. Plus regular enemies have aggro and passive modes - if you run away for too long enemies go back to passive mode and regenerate their hp. They also have chase behaviors you can set up like possibly teleporting right on you if you try to run. But we'll discuss that more later.
+
+### Usability
+
+So I looked into some AI scripts for the boss battles in WC3 written in [JASS](https://www.thehelper.net/threads/jass-ai-just-triggers.86106/), some Dota 2 AI (for example I saw one called `ai_bkb_pa_lina.lua` which is for a Dota 2 bot game but the same principle applies to PVE enemies) for some bosses written in Lua, and some AI scripts in [Final Fantasy](<https://finalfantasy.fandom.com/wiki/Ozma_(Final_Fantasy_IX)>) and in my opinion it's about the same difficulty to maintain as spaghetti blueprints. With those solutions you can end up with spaghetti Blueprint's cousin, control flow soup.
+
+More specifically some problems I see observing stuff like that Ozma script I linked and Dota 2 bot scripts is:
+
+1. Control Flow Soup - You're maintaining a custom state machine manually using lots of if/elseif logic.
+2. Low discoverability - Like you have to know all the scripting functions and you trust someone to document them well.
+3. Debugging - You might be able to step through and debug a bot script but this always a challenge especially if you have multiple bots since one might break and you want to step in code for that specific one. All this state within the scripts is going to be hard to keep track of.
+4. Interrupt Handling - What happens when your bot is stunned while they are performing an action? In those old school FF games this isn't a thing so they get a pass.
+
+Looking at these I'm very impressed by how many AI scripts people have made for these games. But I'm positive we can do better just using Unreal's Behavior trees. But the goal is to make sure we never get into a scenario where our tree makes you feel uncomfortable looking at it like these scripts.
+
+## My System
+
+The next question becomes can behavior trees handle all that complexity, and more cleanly than scripting loops?
+
+Well, I think so. And now I will show you how I was able to hit every bullet point in the list I provided. And not only will I show you how I did it, cause you can ask ChatGPT and it gives you some pretty good answers to a level of some online tutorial you might see. But I'll show you how I was able to cut down on the number of nodes so that you don't wince in fear when you open up a behavior tree in Unbounded Perceptions.
+
+### Actions
+
+This is the system which underpins all the behavior tree tasks I'll talk about in a bit.
+
+Action and action steps are C++ async logic flows like moving, attacking, casting spells, patrolling, and attack moving.
+
+This system is driven by `TPromise` instead of callbacks. Basically what happens is in the C++ code you add these action components to an `AIController` which gives units that use that type of controller the specific action capabilities (like if you add a `UpMoveActionComponent` then units can move).
+
+Each action function component has two functions to trigger behavior - one is something like `BeginAction()` and another is `BeginActionStep()`. Both return a handler which you can use to track the progress of the async work or event abort an action step. The reason why there's two functions is you can actually build actions out of action steps like attack move is built out of a attack action step and a move action step. The `BeginAction()` variant is used in the action state machine which tracks what action we're performing not the steps that we can use to build other actions.
+
+Anyways this is a bit about what goes on under the hood that eventually powers the behavior tree tasks we'll get into. Know that the action system has logic to handle interrupts, and regardless if it completes successfully it will send out a message to the behavior tree through an `FAIMessage`.
+
+### The Tasks and Targeting
+
+We have a lot of async tasks listed in the list of reqs. So the first thing the system provides are custom task nodes to auto attack, cast spells and move. This base class of these task node is called `UpBTTask_QueryAction`, because it uses the action system and EQS queries.
+
+The connection between tasks and the action system is these tasks typically call `BeginAction` in their `ExecuteTask` logic to do some async work like start the spell cast flow and then use `WaitForMessage` to observe the FAIMessage the action system broadcasts when the async work is complete.
+
+Because of how complex the game is and how many interactions there are it's not a good idea to assume that these tasks will ever finish so they all have a timeout threshold you can specify in which they automatically fail.
+
+> For example you might have a task to move to a location then the player body blocks the AI or slows it to a crawl causing it to never get a chance to move onto another task.
+
+Now all these actions also have some kind of targeting involved except for some spells which require no targets (imagine like Pipe of Insight in Dota 2). Thus that functionality is also baked into the query action as well.
+
+Specifically each action lets you provide some kind of targeting strategy either in the form of EQS or a custom targeting strategy (called `UTargetFindingStrategy`) which is like running a script to pick a target instead of having to run a entire EQS query which saves having to use one more `Run EQS Query` node.
+
+While for each task you need to provide some targeting information, you can end up cache target finding and reusing the previously found target via the `PriorTargetStrategy` which controls if you want to rely on some previously set state. In our system you should only do this when the AI should perform a sequence of tasks on the same target - and the first task in the sequence cannot rely on the previous target since across branches there should be no shared state which I'll get into in the next section.
+
+<img
+  src="../images/GameImagesInline/BasicTaskExample.png"
+  alt="Basic Task Example"
+/>
+
+This picture shows one task selected that derives from `UpBTTask_QueryAction`. It's a task that casts a spell. You have to pick the right target finding strategy, and we have some custom detail logic to help filter out EQS queries and custom targeting strategies to only list those that are correct in the asset picker.
+
+The last aspect of the base query action tasks is that they all fail on a delay. A lot of times AI will fail and get stuck trying to rerun a node over and over again rapidly. For example if your targeting strategy picks only between visible enemies and there are none, then it will just run the task over and over again as it fails each time. This delay can help save one extra wait node you might need.
+
+### Stateless Behavior Trees and Handling Interrupts
+
+The behavior trees shown have no corresponding blackboard. It reads state directly from the game, and there's no "behavior tree" exclusive state that would go in a black board key . The closest thing to AI state might be targeting state, but that's not necessarily only used by AI. Spells use that info too since the spell cast flow records who you targeted and the spell can use that information to do some checks on the target. You'd use this when implementing something like BKB in Dota since you can't cast many spells on a BKB'd target (at least in the past; they did change this).
+
+Here's the reasoning for not using a blackboard I wrote up a while back:
+
+The BT is designed to be stateless for simplicity and flexibility.
+
+- The BT reads from unit state, but does not store AI state (no Blackboard usage).
+- Any temporary data the behavior tree logic ends up writing to is for optimization only (e.g., our target finding aspect of the tasks writes to a target component and can reuse the previous target).
+- Queries and actions are always run in sequence, ensuring they are recomputed before use.
+- Fallbacks are in place in case queries fail (e.g., if no spell target is found, try using previously computed targets).
+
+Now one aspect of a stateless behavior tree that I think is very important is the ability to restart it.
+
+If we apply status effects that essentially override AI temporarily (stun, fear, taunt) then we can just stop the behavior tree, and then reset it.
+
+Since the BT is stateless, restarting it does not cause issues since the rule for this system that designers have to follow is there is no shared state across branches. 
+
+>The only shared state is reusing a cached target within sequence of tasks. But if you switch to another branch, the first task should not rely on a previous target and always run its own target finding logic.
+
+---
+
+There's one more thing to mention about interrupts. In the game once you start casting a spell you can't really be interrupted unless you get stunned, feared, or taunted. I call these AI overriding behaviors since they essentially lead to the tree to restart.
+
+The mana check only occurs once you start incanting, granted you only lose mana once you finish incanting. But a unit won't stop incanting if it loses mana during the process or if the target runs out of vision.
+
+`There's one more time a task needs to be interrupted, and that's when your target dies. That won't restart the behavior tree like AI overriding behaviors, but instead the task wll be considered failed instead of doing an abort. Thus we have to handle this case specifically in our tasks. When the target of some task dies we have to have a system which sends out a `FAIMessage` `AIMessage_TargetLoss` and the tasks handle observe this in `WaitForAction` and eventually finish the task with the result of `Failed` which can be handled in the tree whereas the stun flow leads to `Abort`.
+
+### Conditional Behaviors
+
+I don't need to go in depth in this section since conditional decorators cover this. One interesting thing to note though is that we have some specific decorators like "Is Vital Under Threshold" and then we also have a general conditional decorator that operates using the <A href="/game/event">Data Driven Primitives</A> system - particularly `URTSConditional`.
+
+### Reactive Behaviors 
+
+The last requirement to cover is being able to respond to situations in the game immediately - breaking the typical loop flow of the behavior tree.
+
+To do this we have two main constructs:
+
+* A decorator which lets you subscribe to an event and then queue up a new behavior tree when the event occurs. The observation only occurs within the branch of the tree the decorator is placed in.
+* A service which polls a condition and then queues up a new behavior tree when the condition occurs.
+
+<img src="../images/GameImagesInline/RTSEventDecorator.png" alt="RTS Event Decorator"/>
+<img src="../images/GameImagesInline/RTSReactService.png" alt="RTS React Service"/>
+
+>You'd use the service if it gets expensive to do the event based approach cause sometimes you might have some complex events like if you're event requires you to setup subscriptions to multiple units there's probably a point where the subscription cost could lead to spikes. 
+
+Ok so with polling and events I said you could kind of figure out the moment something occurs (or a closeby moment with polling) and then "queue a new behavior tree"? Kind of, there's actually a more convoluted system I developed:
+
+What I'm actually doing with the new behavior tree depends on this `ReactTreeFinishedBehavior` enum you can specify. I wrote this in my notes:
+
+* If we believe that the circumstances after the reactive behavior tree have changed we might as well **restart** the tree.
+	* If we restart the tree we should reset the targeting as well.
+* If we don't think the circumstances have changed then just **continue** with the behavior tree where we left off before the reactive behavior tree.
+* If we want to mark a phase **transition** (one way switch to another tree), then we start a new tree and end the current one.
+
+So if the reaction constructs I made lets us run a new behavior tree, this finished behavior controls what occurs after the reaction.
+
+We can restart the original tree again once the reaction finishes. We can continue even at the task that we would've kept going on had the reaction not happened, and we can also do a transition where instead of going back to the original tree, the reactive tree is the new behavior to let us hit that requirement of "Boss Phases".
+
+It took a lot of experimenting to get this to work particularly for the continue case since it requires pushing a new behavior tree to the stack and there are rules to when you can push a new behavior tree instance to the stack which requires some task level observation to get the timing right.
+
+---
+
+Outside of those two reactive constructs i have a  special task called `QuerySetTarget` that kind of fits in with this topic. You'd use this task at the start of a branch to find a target and you can reuse that target for other tasks you might take. But I mentioned before the target finding logic is baked into the base `UBTTask_QueryActions` almost all of the async tasks.
+
+But it also does something special - it enables you to set a target and then if the target is a unit, you can setup an observer to when the unit tries to run out of vision. Then you can run a reactive behavior tree, like a chase behavior tree to run towards it or maybe teleport towards it.
+
+## Example
+
+Here's an example of a full tree:
+
+<img src="../images/GameImagesInline/ReactiveBehaviorTreeExample.png" alt="Reactive Behavior Tree Example"/>
+
+* The passive mode service is something I didn't really go over but we have passive mode and aggressive modes in this game. Passive mode are what enemies do when no units are around. Some just wait there, while others might patrol. The service just indicates that for this behavior tree we can revert to passive mode if no enemies are around for some amount of time.
+* We have the `QuerySetTarget` node to setup the target for this branch of the tree that we'll end up reusing. But more importantly it also observes if the unit goes out of vision and runs a reactive behavior tree (which I set to be a tree that moves to where the target last was) if the target goes out of vision.
+* We try to cast a spell on the target and auto attack it after. We have custom targeting on each node still as fallbacks, and the nodes use the `PriorTargetStrategy` of `Prior Target First` which prioritizes the cached target for the branch or uses the fallback target finding strategy if that is not set.
+    * If the target goes out of vision any time during this branch we'll end up running that reactive behavior tree - so if the target runs away during a spell cast we finish the cast and start chasing.
+
+</div>
+</main>

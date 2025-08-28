@@ -1,0 +1,80 @@
+<main>
+<div class="m-2 mdx-content">
+
+## Problema
+
+Since the goal is for this game to be a relatively large Dota 2 like RPG game, I need to have data for a lot of items.
+
+And thus one architectural decision I had to make was do I use Data Asset or Data Tables?
+
+Each has their strengths which I'll talk about a bit what I know which is hopefully right.
+
+And I'll explain why I ended up using a relational data table structure for my item system.
+
+## Background
+
+In my game we have an item struct `FMyItem` which is used in various places like in enemy drops, or quest goals where you have to gather some amount of items.
+
+`FMyItem` just has an integer id since the editor works well that type. Not sure if nowadays you can use like an unsigned integer but I have a `ClampMin` property metadata specifier to prevent setting them to any value below 0 in the editor.
+
+It also has a `count` property.
+
+To help people specify items without having to like know all the item ids by memory we have a little custom detail panel I made that looks like:
+
+<img src="../images/GameImagesInline/TriggerConditionalExample.png" alt="Trigger Conditional Example"/>
+
+The picture shows you can fill out the id of the item with a nice combobox probably using a virtualized list that lets you scroll through all the item ids and see the names besides them and use that to actually pick an id to fill out for the field.
+
+The actual data for an item is gotten by using the id to lookup information in a set of data tables which I'll explain next, but know each item has fields like:
+
+* `name`: `FText`
+* `description`: `FText`
+* `itemType`: `FGameplayTagContainer`
+* `image`: `TSoftObjectPtr<UTexture2D>`
+
+and some other stuff too. Some specific types of items like consumables have information about the ability that gets activated when you use them.
+
+## Solution
+
+I realized after thinking about what kind of items I need to build for the game that I thought it was quite useful to be able to bulk edit items.
+
+The main category of items are equipment, consumables, and quest items.
+
+When it comes to equipment or consumables you might want to do some targeted edits to items with certain properties. Maybe like you find all items with the name "Fruit" in it that has the item type tag "Item.Type.Consumable.Food".
+
+I think the easiest way to do this is within a program like excel. All you have to do is... ask ChatGPT. Be like yo here's my schema and so I need you to show me how to do this in excel. And then you run some excel script and possibly be able to bulk edit these rows.
+
+And ofc since we have a data table we can do this as long as we just create a CSV version of our table. Imagine trying to do this with separate data assets...
+
+Now I know you're thinking hey you have this large table always loaded in memory!
+
+The idea is to keep the rows lean. The size of one `FItemLookupRow` in my game is 128 bytes. 100000 items is around 12.8 MB which I think is pretty reasonable.
+
+And if we run into some memory pressure constraints we can try to do stuff like start splitting up tables or breaking up data assets out of some columns with perhaps an Unreal Python script (I used one before to do this migration when I made data assets for my spells which I used to just cram all the static data on the spell blueprint).
+
+### Data Asset Tradeoffs
+
+I still use data assets when they make sense, like for polymorphic data since you can make data assets derive from each other. 
+
+You can load all the different data assets and populate a list with them using the asset manager (like I do in the playground since I have data asset with hero and enemy static data like their names and icons). Then in the playground we have a giant list we populate with that information and we can avoid spawning the actual hero or enemy blueprint.
+
+<img src="../images/GameImagesInline/WorldMapPlayground.png" alt="World Map Playground"/>
+
+Data assets also ofc let you load fine grained bits of data in an async manner.
+
+But for items I didn't want to lose that bulk editing capabilities you get from converting data tables to CSV and editing them in excel.
+
+Also, for my custom details panel, had I used data assets for each item I would have to async load every single data asset using the asset manager. The async loads might complicate the `FMyItem` details customization logic I made. I could see you'd probably have to like setup a callback for the async loads to perhaps like maybe track the counts and then do the main logic of building a virtualized list for the details panel once the count hits the number of primary assets.
+
+Besides having to wait for multiple load operations, there's also a startup cost. The asset manager has to scan the primary assets and build that map of primary asset id to asset which might slow the editor startup the more items we have.
+
+### Relational Tables
+
+To keep my main item table lean and prevent typical database anomalies, we split up the tables in the game. We have one main item table, a consumable table, and a equipment table each with their own unique set of columns. Typical database normalization stuff you learn in database class, where the item id is the foreign key. Since there's no RDBMS there's no system in play to prevent you from deletion or addition anomalies, but we do have some workflows. There's a item creation helper I made that will add properly to both related tables when you make a new item.
+
+I don't want to show all the details and spoil everything but here's a picture of two related tables and a editor widget I'm working on that adds to both when you create a new consumable type item.
+
+<img src="../images/GameImagesInline/ConsumableRelation.png" alt="Trigger Conditional Example"/>
+
+</div>
+</main>

@@ -1,5 +1,5 @@
 import { GameGallery } from "~/components/Gallery";
-import App from '../../app';
+import App from "../../app";
 import { A } from "@solidjs/router";
 
 <main class="m-6">
@@ -10,6 +10,14 @@ import { A } from "@solidjs/router";
 
 This page is about all the gameplay features I designed and developed for the game.
 
+    <p class="text-center">
+        The gallery may take some time to load...
+    </p>
+
+    <div class="mt-1 mb-4 mx-8 border-solid border border-gray-200">
+        <GameGallery/>
+    </div>
+
         ## History
 
 I started game dev working through these tutorial series maybe 10 years ago?
@@ -19,6 +27,22 @@ I started game dev working through these tutorial series maybe 10 years ago?
         3. [First Unreal Tutorial](https://www.youtube.com/watch?v=aipoAphfAN8) - This is the first tutorial I watched in UE4
 
 And my game nowadays still built upon that same RTS tutorial project. I migrated my game all the way from 4.12 to 5.6 over the years. I think around version 5.1 is when I started to just build Unreal from source since I wanted to use Unreal-Engine AngelScript to learn more about AngelScript syntax since we used it in my last job, granted that was in a custom game engine.
+
+    ## Technical Features Breakdowns
+
+    Here we'll link pages to some writeups about the different features I made. Some of them are a work in progress.
+
+    * <A href="/game/event">Data Driven Primitives and Event Flags - Data Driven Approach to Dynamic Levels</A>
+    * <A href="/game/items">Item System - Relational Tables</A>
+    * <A href="/game/ai">AI - Reactive Behaviors</A>
+    * <A href="/game/characterMovement">Character Movement - Flocking, Custom Movement Component and Interactable Use Positioning</A>
+    * <A href="/game/vision">Vision System - Multithreaded Stuff with Vision Groups, Weak Pointers, and `TQueue`</A>
+    * <A href="/game/quests">Quest System - Custom Details versus Quest Graph</A>
+    * <A href="/game/assetCreation">Asset Creation - AngelScript Editor Widget</A>
+    * <A href="/game/dialog">Dialog Systems in Multiplayer</A>
+    * <A href="/game/multiplayer">Refactoring a Single Player Game to Multiplayer</A>
+    * <A href="/game/spells">Spell System - Using GAS but not Prediction</A>
+    
 
     ## What is the core game loop of Up?
 
@@ -43,7 +67,7 @@ And my game nowadays still built upon that same RTS tutorial project. I migrated
     So after you complete the last goal in the quest a dialog plays and then you're taken back to the world map which also acts as a playground.
 
     From the world map you typically pick what quest you're trying to progress in. I'll go into more detail in the quest system and how it's organized in a bit just know that you have a list of locations and then you can click on one and see all the quests you have available at that location. There's also other things listed in a location like side quests and eventually an option to free roam that location outside of the context of a quest.
-    
+
     <img src="images/GameImagesInline/WorldMap.png" alt="world map"/>
 
     >I'll talk more about the world map later but it also acts as a playground. Players can spawn the enemies they've come across, heroes they've unlocked, and items they've collected to try and test out some combat combinations or something.
@@ -67,19 +91,6 @@ And my game nowadays still built upon that same RTS tutorial project. I migrated
     You get stronger with your heroes since the XP they gain is saved as you return back to the world map or if you complete a quest objective. Then if the next quest you do reuses that hero you have all that progress you made rolled over so you can still grind in this game - it's incentivized cause enemies might have some rare drops that might be useful for certain battles.
 
     But for some quests  you might get like a new hero that might only be used for a certain quest. That's basically a sign that hey you need to really adjust your playstyle for this mission cause you're going to have to learn to leverage this hero who might have some niche ability.
-
-    ## Features
-
-    Here we'll link pages to some writeups about the different features I made.
-
-    * <A href="/game/event">Data Driven Primitives and Event Flags - Data Driven Approach to Dynamic Levels</A>
-    * <A href="/game/items">Item System - Relational Tables</A>
-    * <A href="/game/quests">Quest System - Custom Details versus Quest Graph</A>
-    * <A href="/game/assetCreation">Asset Creation - AngelScript Editor Widget</A>
-    * <A href="/game/characterMovement">Character Movement - Flocking, Custom Movement Component and Interactable Use Positioning</A>
-    * <A href="/game/dialog">Dialog Systems in Multiplayer</A>
-    * <A href="/game/multiplayer">Refactoring a Single Player Game to Multiplayer</A>
-    * <A href="/game/spells">Spell System - Using GAS but not Prediction</A>
 
     ## Videos
 
@@ -123,16 +134,6 @@ And my game nowadays still built upon that same RTS tutorial project. I migrated
   referrerpolicy="strict-origin-when-cross-origin"
   allowfullscreen
 ></iframe>
-
-    Here's a gallery of a few pictures of the game.
-
-    <p class="text-center">
-        The gallery may take some time to load...
-    </p>
-
-    <div class="mt-1 mb-4 mx-8 border-solid border border-gray-200">
-        <GameGallery/>
-    </div>
 
     </div>
 
