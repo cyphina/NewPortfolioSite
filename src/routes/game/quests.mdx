@@ -1,7 +1,136 @@
 <main>
 <div class="m-2 mdx-content">
 
-# TODO
+# Quests
+
+
+## Overview
+
+In Up, a quest is made using the editor creation widget in which you specify the quest name and the quest type. This generates two assets - the data asset (quest static data) and the quest objective file `_questobj_` file:
+
+<img src="../images/GameImagesInline/QuestDetailsExample.png" alt="Quest Details"/>
+
+You fill out the data about what the player has to do in the quest in these quest objective files. You can see that we setup custom details for these quest objectives to add some spacing and color highlighting to the most important things. We've also renamed some rows to let you be able to search for important quest information using keywords (like 1-1 to look at objective 1 goal 1 or something). 
+
+To understand more I have to explain the quest terminology:
+
+Each quest contains **objectives**. Each objective acts as a step in the quest, and each objective can contain multiple **subgoals**.
+
+### Objectives
+
+**Objectives** tell us information about what our short term goal is and records information about how this relates to the larger story.
+
+Each objective takes place in a certain location's POI, meaning it unlocks a location on the world map (for the duration of the quest and only if it's not already unlocked). You can see this in the description of the main game loop I put in the [game page](/game).
+
+> If we have back to back objectives that take place at the same location we don't want the player to always go back to the world map to access the next objective. The next objective should automatically be activated.
+>
+> However sometimes it does make sense if the objective takes place at a new location or a different part of the same map.
+>
+> Sometimes the player can enter the sublevel of the new location just by moving. Sometimes there might be a trigger forcibly kick the player out of the map, in which the player would reenter a different sublevel possibly in the same map.
+
+Each objective can specify a position to spawn us in when entering the action location associated with it. If there's no overridden location specified for the location we fall back to the location specified in the sublevel's level actor.
+
+Also there's a party associated with each objective meaning if you're joining a location to complete an objective, you have to pick from the party members available in the objective. This is due to the episodic nature of these objectives - you might be at a point of the story or doing some side story where you only have some characters.
+
+It's critical to set this location properly. If the player quits and reloads then their last save should be from the last objective completed or when they left back to the world map. That means objectives should always provide good locations to spawn a player back in.
+
+### Subgoals
+
+**Subgoals** tell the player information about the tasks they have to complete, They might have some flair in their description like "Kill the 3 robots or you're going to die!" but they leave out any story details.
+
+In general if you complete all the goals in an objective you complete that objective and move onto the next one. That's how most quest work.
+
+However there are some more complex objectives where where the goals that are necessary to complete are not a list, but a tree.
+
+The way we handle this is by having two kinds of goals - regular goals and then **goal sequence**s.
+
+The designer can create a goal sequence which lets us specify a list of goals the player should complete to complete the objective - but a sequence is also considered a goal so we can create nested sequences.
+
+For example we might have a list of goals like
+
+1. Complete All the Goals
+   1. Hunt A
+   2. Hunt B
+   3. Gather C
+   4. Complete One of the Following Goals
+      1. Hunt D
+      2. Hunt E
+
+The sequence system makes this possible. In the above example 1 and 4 are sequential goals aka they can contain subgoals.
+
+The sequence system also has logical operators we can specify to group goals together and specify what the player has to complete.
+
+The options are:
+
+1. AND - Complete all the goals in the sequence
+2. OR - Complete one of the goals in the sequence
+3. SEQUENTIAL - Complete all the goals in the sequence but only one is active at a time
+   1. In the above example that means you can't complete Goal 2 before Goal 1. Goal 2 isn't even shown in the UI.
+
+---
+
+Goals have an optional id field (a gameplay tag). Not all goals need ids since that would be overkill to make ids for the potentially thousands of goals we have.
+
+We often use these ids information to determine what dialog an NPC should use since all the active goal ids are stored in the quest manager:
+
+<img src="../images/GameImagesInline/NPCCurrentDialog.png" alt="NPC Current Dialog"/>
+
+#### Example
+
+If you scroll back up to that quest details iamge, you can see there's sa talk goal 0-2-0 that has a "Dialog Event Tag to Listen For". Well that lets us only finish the goal if we hit a specific part of a dialog tree. In this dialog picture I'll show below you have to choose the first option to lead to some event being fired to complete goal 0-2-0.
+
+<img src="../images/GameImagesInline/DialogBranchingGameplayEvent.png" alt="Dialog Branching Gameplay Event"/>
+
+### "Event" Sequential and "Regressable" Goals
+
+Some goals require that we have a setup where we track the progress of multiple goals simultaneously but they are only officially complete after an event (commonly when we turn them in aka talk to an NPC).
+
+Typically we could use a structure like:
+
+1. Complete the Following
+   1. Gather A
+   2. Gather B
+2. Talk to NPC C
+
+But when have a **regressable goal** like:
+
+- A gathering goal (the player can drop items)
+- Reach some fuel level above 80% which drops as you drive for some minigame
+
+and we need to follow it up with some event that should only succeed if the "regressable" goal's condition is met like "Turn items to NPC C", the goal shouldn't automatically complete when the condition is met like the regular `UUpGoal`.
+
+They key differences are:
+
+1. We need the player to do some task after some prerequisite goals and the regressable goals act as conditionals.
+2. The goals can waver between fail and completion states as opposed to being completed instantly when the goal's requirements are met.
+   1. That means while the standard observation path can "complete" the subgoals, the observers should not be necessarily unregistered until the sequential goal is complete.
+      1. The subgoals become more like conditions, though we need to update the state associated with them like how many items we've gathered.
+   2. The sequential goal should not complete when the subgoals are complete.
+
+> You might ask why don't we use conditionals? The answer is because we still might want features of goals when specifying an some action the player should take after completing the "regressable" goals.
+>
+> For example we might want the goal location. And maybe we want the goal style information for displaying that locational data. Or we want a specialized description that has nothing to do with conditionals which would bloat the conditional API. Or maybe we want the goal id.
+>
+> And in the various ListViews we use for showing goals would need extra logic to handle the case of displaying information for `URTSConditional`.
+>
+> And there might be more conditionals than what makes sense to be used for goals because conditionals are more generic. This makes the search for the conditional you would want in the dropdown more complex.
+
+## Quests and Episodic Storytelling
+
+There are a few different kinds of quests:
+
+* Main quests - Main storyline
+* Side stories - Can take place pretty much anytime and you see them in your world map action list and you can do them anytime. They take place some random date, even some could take place in the past. There's some discrepancies since if you have a side story in the past you might still use your hero which has the progression of all the quests you did in the future. But uhh... I'm just going to have to ask people to let that slide to not make the system overly complex.
+* Resource Quests - Think like [kitchen quest](https://www.jellyneo.net/?go=kitchen_quests) in Neopets. Not associated with a location, you just have to do some random goals.
+* Subplot Quests - A quest tied to a main or side story quest. It's like an activity you can unlock while doing one of those quests since w/o them you could be exploring some pretty barren large maps w/o anything to do. Basically if you interact with something in the map during the main and side story you might unlock a subplot quest.
+
+## UI
+
+Hey I used to be UI engineer before the game was canceled. That's why I didn't spend as much time doing UI for my game since I was already grinding that out at work 🤣. 
+
+For quests you have a nice virtualized treelist and a quest indicator which shows where the next place you should move your characters to relative to the current camrea position. Also it works even if the target actor is like in another level (as long as you setup the level relationships correctly in the level script).
+
+<img src="../images/GameImagesInline/QuestListAndIndicator.png" alt="Quest List And Indicator"/>
 
 </div>
 </main>

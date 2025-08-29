@@ -143,13 +143,15 @@ What I'm actually doing with the new behavior tree depends on this `ReactTreeFin
 * If we believe that the circumstances after the reactive behavior tree have changed we might as well **restart** the tree.
 	* If we restart the tree we should reset the targeting as well.
 * If we don't think the circumstances have changed then just **continue** with the behavior tree where we left off before the reactive behavior tree.
+  * Requires careful management of the events that lead to the reactive subtree cause you have to stop the event before you push the reactive subtree and start it again afterwards.
 * If we want to mark a phase **transition** (one way switch to another tree), then we start a new tree and end the current one.
 
 So if the reaction constructs I made lets us run a new behavior tree, this finished behavior controls what occurs after the reaction.
 
-We can restart the original tree again once the reaction finishes. We can continue even at the task that we would've kept going on had the reaction not happened, and we can also do a transition where instead of going back to the original tree, the reactive tree is the new behavior to let us hit that requirement of "Boss Phases".
+There's also how you handle reacts aka when you start the reactive behavior tree. In my system you can:
 
-It took a lot of experimenting to get this to work particularly for the continue case since it requires pushing a new behavior tree to the stack. Sometimes you might want to queue up a behavior tree after you finish a task and then you might have to set up observers to external systems which means you have to handle this in aborts. You have to pause events during your reactive subtree or you bleed main tree functionality. Then you have to reinstate them if you decide to continue off from where you are after your reactive subtree finishes again.
+* Do it instantly. So if you're casting a spell you just stop.
+* Queue it after a task ends.
 
 ---
 
