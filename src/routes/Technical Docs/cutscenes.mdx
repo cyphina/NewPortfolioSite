@@ -54,6 +54,8 @@ That’s the kind of energy I wanted to capture. So I set out to build a cutscen
 
 To meet these requirements I did some investigations into what Unreal provided and I have a technical breakdown of how I can get most of the way to meeting these requirements using Sequencer, Take Recorder, and the Dialog System I built on top of [NotYet's dialog plugin](https://github.com/NotYetGames/DlgSystem) (as always thanks a lot to them for open sourcing it 😊). 
 
+>I'm not a very good animator (I just know how to integrate them with the game and I know a bit about animation programming from having read the hands-on Packt book on it) and I also like the kind of in game cutscene stuff of the old RPGs like Treasure of the Rudras or FF4-6. We use take recorder to emulate that.
+
 Then I had to write the things I needed to build on top of Sequencer to achieve the reqs, which is what the majority of this article will be about.
 
 ## Technical Additions
@@ -66,9 +68,27 @@ The goal of the custom sequencer track is to:
 2. Continue to advance the dialog (can do this with autoplay or pause after each line is shown to make it so users have to confirm before we keep playing the cutscene).
 3. Be able to see the actual dialog lines on the track so you can have an idea about the text each section is controlling...
 
-You can build a custom sequencer track that uses sections in Blueprints, but it's very limited in it's visualization and can't meet requirement 3. So I ended up building this in C++ which involves having to do more work about setting up not just the custom section, but the custom track, some stuff in the editor about adding tracks. You needed to setup 
+You can build a custom sequencer track that uses sections in Blueprints, but it's very limited in it's visualization and can't meet requirement 3. It does provide a lot of boilerplate you have to do to implement this in C++ like having to write code for the track, track instance, section, drawer, and track editor, selection, etc.
+
+Here's what it looks like:
+
+<img src="../images/GameImagesInline/CustomTrack.png" alt='custom track'/>
+
+Unlike the sound track Unreal provides you with this is a bit more lightweight since it just plays a 2D sound.
+
+You can see from the video at the top when the playhead reaches the section it shows the dialog UI and advances it. At the end of the section it pauses or if you have autoplay it just keeps going and advances the dialog (unless you're at a choice). Later on I'm thinking of implementing multiple layers of tracks to get a comic book or Phantasy Star 4 like text box effect where you have multiple of them popping up around.
+
+### Cutscene Control
+
+Just like in star ocean I wanted us to be able to skip past cutscenes, and speedup watching them. We added this and support for this in our custom track and also the dialog textbox.
+
+The important thing is we still have to fire off all the triggers in the cutscene when we skip it in case we're actually using it to drive gameplay positions.
+
+Also for some cutscenes that take place in another level that's not the loaded one (like a flashback), I usually just render the sequence and use the track that lets you playback rendered sequences.
 
 ### AI Generated VO
+
+>The video at the top showcases this workflow.
 
 I'm not a big fan of AI replacing people, but I think it's cool to use it to like help time out your sequencer sections. By that I mean feeding your story script to a library like Chatterbox, and generating some AI VO to figure out how long it takes someone to say something with a similar voice to your target voice. 
 
@@ -83,6 +103,8 @@ We build a tool that lets you transform all the .wav files in a folder into sect
 I haven't really finished the implementation of this. Nor do I know if I'll ever use it but hey in the design phase you have to live by the philosophy "Never Say Never".
 
 At the moment my idea for branching cutscenes involves splitting each cutscene into separate sequences instead of trying to use a master sequence with subsequences and disabling/enabling tracks. I mean I've seen some people talk about how that's possible online but it's like if there's no official docs you're running into that territory where you have to really dive into the source code and be ready to invest in it. I'm just a solo dev or I'd do it lol.
+
+>Apparantly in 5.5 there's some condition thing you can use now. I'll probably try integrate it with the `RTSConditional` system. I still think having one massive track is a bit hard to maintain. I'd still lean towards probably wanting to use separate sequences instead of conditionally played subsequences but need to experiment.
 
 Plus I mean it's probably neater just having separate cutscenes. So for our system you would typically branch cutscens by using the play cutscene trigger in the dialog graph. And when building a cutscene, if you want to associate a dialog with a cutscene to see the dialog text on your sections, you can use a guid to identify a starting point node that way you can start on a separate branch.
 
