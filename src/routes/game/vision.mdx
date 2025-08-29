@@ -49,7 +49,7 @@ Units are destroyed on a delay so most often your `IsValid()` check can catch if
 
 We eventually lock the set of enemies in the vision sphere and do a line trace from the unit to each enemy. We store the list of hit enemies since we need to figure out what enemies were visible last frame to know to update the ones that are no longer visible.
 
->I think technically reading the positions we use for the line trace is not thread-safe. The transform data can be modified on the main thread (like the transform being written to every frame during movement) and reading it off-thread could in rare cases result in corrupted or inconsistent values from tearing. That said I haven't' seen any problems in practice even when we have a lot of units moving around, and teleporting.
+>I technically reading the positions we use for the line trace is not thread-safe. The transform data can be modified on the main thread (like the transform being written to every frame during movement) and reading it off-thread could in rare cases result in corrupted or inconsistent values from tearing. That said I haven't' seen any problems in practice even when we have a lot of units moving around, and teleporting. I'm in the works of fixing though by sending a snapshot of the unit positional data from the main thread in the previous steps where we copy over the list of units.
 >
 >I'd guess I have't seen problems and the system seems fair is cause vision checks could fire one frame early or late from the tearing since typically units aren't teleporting around a lot and maybe we're reading values that are off by a bit since we're reading a partially updated value. And position updates are small frame to frame and large jumps are rare but this might make us be off for a frame meaning you might see a unit pop in on a delay or go out of vision ona slight delay. If this ever becomes a huge problem we'll revisit this but I think it's a good tradeoff compared to having to somehow get the positional data safely to the vision thread.
 >
@@ -80,7 +80,7 @@ We have to run the actually visibility changing logic in the main thread in the 
 
 6. Clean up/Invalidate Dead Units
 
-The vision thread has a message queue. The main thread uses it to communicate to the vision thread about when units die so we can clean up the bookkeeping for groups and individual units.
+The vision thread has a message queue (`TQueue`). The main thread uses it to communicate to the vision thread about when units die so we can clean up the bookkeeping for groups and individual units.
 
 7. Exposing Results to Gameplay Systems
 

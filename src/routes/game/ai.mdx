@@ -149,7 +149,7 @@ So if the reaction constructs I made lets us run a new behavior tree, this finis
 
 We can restart the original tree again once the reaction finishes. We can continue even at the task that we would've kept going on had the reaction not happened, and we can also do a transition where instead of going back to the original tree, the reactive tree is the new behavior to let us hit that requirement of "Boss Phases".
 
-It took a lot of experimenting to get this to work particularly for the continue case since it requires pushing a new behavior tree to the stack and there are rules to when you can push a new behavior tree instance to the stack which requires some task level observation to get the timing right.
+It took a lot of experimenting to get this to work particularly for the continue case since it requires pushing a new behavior tree to the stack. Sometimes you might want to queue up a behavior tree after you finish a task and then you might have to set up observers to external systems which means you have to handle this in aborts. You have to pause events during your reactive subtree or you bleed main tree functionality. Then you have to reinstate them if you decide to continue off from where you are after your reactive subtree finishes again.
 
 ---
 
