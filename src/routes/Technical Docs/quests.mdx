@@ -44,7 +44,7 @@ Also there's a party associated with each objective meaning if you're joining a 
 
 It's critical to set this location properly. If the player quits and reloads then their last save should be from the last objective completed or when they left back to the world map. That means objectives should always provide good locations to spawn a player back in.
 
-### Subgoals
+## Subgoals
 
 **Subgoals** tell the player information about the tasks they have to complete, They might have some flair in their description like "Kill the 3 robots or you're going to die!" but they leave out any story details.
 
@@ -126,6 +126,14 @@ They key differences are:
 > And in the various ListViews we use for showing goals would need extra logic to handle the case of displaying information for `URTSConditional`.
 >
 > And there might be more conditionals than what makes sense to be used for goals because conditionals are more generic. This makes the search for the conditional you would want in the dropdown more complex.
+
+## Objective Graph
+
+If you want to design a quest where the next objective you go to depends on specific goals you complete, you can do that. Each goal has a field that you can specify when you complete it what objective to move onto next. Since each objective is some inlined UObject4 we had to id it with a GUID. 
+
+And then there's an editor extension I made that shows a dropdown for each goal and you can see the GUIDs of every objective. Just pick one to link from one goal to an objective. 
+
+There's also custom validation I made to make sure you can reach every objective specified through at least one goal.
 
 ## UI
 
