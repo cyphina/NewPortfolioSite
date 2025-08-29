@@ -2,7 +2,7 @@ import { JSX } from "solid-js";
 import Gallery from "./Gallery";
 
 export default function Main(props: any): JSX.Element {
-  const images = import.meta.glob("/public/images/MainPageGallery/*.jpg", {
+  const images = import.meta.glob("/src/images/MainPageGallery/*.jpg", {
     eager: true,
   });
 

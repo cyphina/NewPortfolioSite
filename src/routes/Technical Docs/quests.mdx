@@ -3,7 +3,6 @@
 
 # Quests
 
-
 ## Overview
 
 In Up, a quest is made using the editor creation widget in which you specify the quest name and the quest type. This generates two assets - the data asset (quest static data) and the quest objective file `_questobj_` file:
@@ -16,7 +15,18 @@ To understand more I have to explain the quest terminology:
 
 Each quest contains **objectives**. Each objective acts as a step in the quest, and each objective can contain multiple **subgoals**.
 
-### Objectives
+>This article is mostly about design. The C++ implementation is a separate `Quest` module with a `GameStateComponent` called `questManager` that tracks active quests, failed quests, and some combination of dynamic quest data that replicates (goals), and lots of events that you hook in from the game module like when goals are added or deleted since the UI for my game lives in the main game module. If you want more details on how to build a system in C++ or need advice just reach out to me in the about me cause that code is proprietary to my game 😁.
+
+## Quests and Episodic Storytelling
+
+There are a few different kinds of quests:
+
+* Main quests - Main storyline
+* Side stories - Can take place pretty much anytime and you see them in your world map action list and you can do them anytime. They take place some random date, even some could take place in the past. There's some discrepancies since if you have a side story in the past you might still use your hero which has the progression of all the quests you did in the future. But uhh... I'm just going to have to ask people to let that slide to not make the system overly complex.
+* Resource Quests - Think like [kitchen quest](https://www.jellyneo.net/?go=kitchen_quests) in Neopets. Not associated with a location, you just have to do some random goals.
+* Subplot Quests - A quest tied to a main or side story quest. It's like an activity you can unlock while doing one of those quests since w/o them you could be exploring some pretty barren large maps w/o anything to do. Basically if you interact with something in the map during the main and side story you might unlock a subplot quest.
+
+## Objectives
 
 **Objectives** tell us information about what our short term goal is and records information about how this relates to the larger story.
 
@@ -75,6 +85,8 @@ We often use these ids information to determine what dialog an NPC should use si
 
 <img src="../images/GameImagesInline/NPCCurrentDialog.png" alt="NPC Current Dialog"/>
 
+This picture shows a blueprint script where you can make a flowchart and check various conditions to pick what dialog an NPC will use when you click on it (to talk). It uses one specific conversation if some quest with a goal is active. If you read the [main game loop article](/game) you can see that this is reinforced by our design where you have one main/side story quest "active" at a time which helps kind of prevent super logic clashes.
+
 #### Example
 
 If you scroll back up to that quest details iamge, you can see there's sa talk goal 0-2-0 that has a "Dialog Event Tag to Listen For". Well that lets us only finish the goal if we hit a specific part of a dialog tree. In this dialog picture I'll show below you have to choose the first option to lead to some event being fired to complete goal 0-2-0.
@@ -114,15 +126,6 @@ They key differences are:
 > And in the various ListViews we use for showing goals would need extra logic to handle the case of displaying information for `URTSConditional`.
 >
 > And there might be more conditionals than what makes sense to be used for goals because conditionals are more generic. This makes the search for the conditional you would want in the dropdown more complex.
-
-## Quests and Episodic Storytelling
-
-There are a few different kinds of quests:
-
-* Main quests - Main storyline
-* Side stories - Can take place pretty much anytime and you see them in your world map action list and you can do them anytime. They take place some random date, even some could take place in the past. There's some discrepancies since if you have a side story in the past you might still use your hero which has the progression of all the quests you did in the future. But uhh... I'm just going to have to ask people to let that slide to not make the system overly complex.
-* Resource Quests - Think like [kitchen quest](https://www.jellyneo.net/?go=kitchen_quests) in Neopets. Not associated with a location, you just have to do some random goals.
-* Subplot Quests - A quest tied to a main or side story quest. It's like an activity you can unlock while doing one of those quests since w/o them you could be exploring some pretty barren large maps w/o anything to do. Basically if you interact with something in the map during the main and side story you might unlock a subplot quest.
 
 ## UI
 

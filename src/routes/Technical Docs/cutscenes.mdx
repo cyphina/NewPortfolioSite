@@ -1,0 +1,94 @@
+<main>
+<div class="m-2 mdx-content">
+
+# Cutscenes
+
+## Overview
+
+To get an overview of the systems I built you can look at this final pipeline video (same one on the [story](/story) page)
+
+<video width="100%" controls>
+  <source src="../CutscenePipelineExample.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+### Motivations
+
+It was December 2023 when I was using the rest of my PTO to have a nice 3 long week winter break. I don’t travel much so I use that time to go deep on one big feature for the game—something I wouldn’t have the bandwidth to build during my regular weekends.
+
+I decided that winter it was time to tackle the cutscene system for the game. But I had no idea where to start gathering reqs. I need to have high level design requirements first, then I need to do some technical research of how to achieve these using systems in Unreal and figure out what can we use and what do we need to build on top of.
+
+When most people think of standout cutscene systems, they probably jump to blockbuster games like the Witcher 3, Cyberpunk 2077, maybe a big cinematic RPG with fully mocapped dialogue. But I’ve never been interested in building a game that feels like an action movie.
+
+I’m not chasing spectacle. I’m chasing stories built on raw emotion and flawed people, not polished tropes or perfectly lit monologues. The kind of stories you find in hidden gems. The ones that aren’t trying to appeal to everyone, and the ones that try to say something even if they're not perfect (as opposed just leaving you with philosophical ideas).
+
+Games like Star Ocean 2 and Treasure of the Rudras, or stories like Yamikin Ushijima-kun or Memories of Matsuko — they don’t care about being clean or crowd-pleasing. They’re awkward, specific, sometimes a little ugly. But they hit deeper cause I think they capture lived experiences. That's something I believe is unique to individuals in contrast to philosophical ideas which many people think about even if they don't have the means to share them in some media form.
+
+>I still used some games that have more standard stories like Xenoblade X as a reference.
+
+That’s the kind of energy I wanted to capture. So I set out to build a cutscene system that could do everything I saw Star Ocean Second Story R and Treasure of the Rudras. Now here are teh requirements I found....
+
+### Requirements
+
+1. Sometimes we have cutscenes where the dialog box is updated purely from the cutscene instead of user input. I'll call this **autoplay**
+	1. Looking at Tokyo Mirage Sessions again I see it's really just something you can hold down and is a byproduct of the cutscene driving the dialog box since the dialog box should progressively display text and finish around when the voice clips are done. And when the voice clips are done we can move onto the next dialog automatically or use the old school wait till the user confirms.
+2. Sequences should have enough data to drive the dialog box - that is in the case of **autoplay** there's no user interaction so in the timeline every time we specify a dialog box to appear, we don't just specify an event but also a range about how long it appears.
+3. Onomatopoeia is just the dialog scrolling but maybe with a more controlled timing over the typical scroll the dialog at a fixed rate.
+4. Dialog choices might have the capability to pick between different branches of a sequence (maybe conditionally show different tracks).
+	1. Apparently there's no way to easily facilitate this in Unreal so if cutscenes do branch in ways other than basic character animations we'll need separate sequences and triggers in the dialog to stop the current sequence and load up the next one.
+5. Fade in and out of a cutscene. Possibly add letterboxing to let people know this is a cutscene more obviously.
+6. Cutscene Transition:
+	1. Run triggers when we fade out of a sequence for a smooth transition which could end up bringing our characters to a new sublevel or moving the camera and party.
+	2. Move characters in position before starting a cutscene. A game like Treasure of the Rudras or Lufia doesn't have a separate like camera for cutscenes so party moves into place.
+		1. However we can have a fade but we still have to remember to move party in place for just the cutscene.
+	3. Actually disable input on the server when we are in a dialog or have a `currentlyInteractingHero` instead of trusting the UI.
+		1. Also need to ensure we find a way to disable AI and possibly hide AI from the camera that plays the cutscene. Granted we don't have to actually move the AI back to the position it was in previous the player should be prepared to fight again after the cutscene (aka they can't just hide in a cutscene).
+		2. Not just dialog but we must disable interactions that would set the `currentlyInteractingHero` when in combat with any hero.
+7. Styling the textbox
+	1. Setting the position per node
+	2. Setting the look of the textbox per node.
+8. Custom animating the text scrolling behavior.
+	1. Need to be able to specify this with a normalized curve.
+9. Skip Menu (all clients need to confirm on multiplayer).
+	1. Like Xenoblade X it can only skip to the next choice.
+
+To meet these requirements I did some investigations into what Unreal provided and I have a technical breakdown of how I can get most of the way to meeting these requirements using Sequencer, Take Recorder, and the Dialog System I built on top of [NotYet's dialog plugin](https://github.com/NotYetGames/DlgSystem) (as always thanks a lot to them for open sourcing it 😊). 
+
+Then I had to write the things I needed to build on top of Sequencer to achieve the reqs, which is what the majority of this article will be about.
+
+## Technical Additions
+
+### Custom Sequencer Track
+
+The goal of the custom sequencer track is to:
+
+1. Show and hide the textbox with the dialog text for the dialog associated with the cutscene.
+2. Continue to advance the dialog (can do this with autoplay or pause after each line is shown to make it so users have to confirm before we keep playing the cutscene).
+3. Be able to see the actual dialog lines on the track so you can have an idea about the text each section is controlling...
+
+You can build a custom sequencer track that uses sections in Blueprints, but it's very limited in it's visualization and can't meet requirement 3. So I ended up building this in C++ which involves having to do more work about setting up not just the custom section, but the custom track, some stuff in the editor about adding tracks. You needed to setup 
+
+### AI Generated VO
+
+I'm not a big fan of AI replacing people, but I think it's cool to use it to like help time out your sequencer sections. By that I mean feeding your story script to a library like Chatterbox, and generating some AI VO to figure out how long it takes someone to say something with a similar voice to your target voice. 
+
+Else you're guessing in your head how long each section should be or using word count. And you have to make some cutscenes now and relatively position all the other sections before you're rich enough to hire some VO 😢.
+
+If you don't have VO yet I think this is a nice strategy. The exact thing is we generate the AI VO from story scripts, and then we import them to editor.
+
+We build a tool that lets you transform all the .wav files in a folder into sections in the sequencer that are automatically sized based on the length of the track. And ofc you need some basic features to help mistakes like being able to reimport things, snap sections closer together... etc.
+
+### Branching Cutscenes
+
+I haven't really finished the implementation of this. Nor do I know if I'll ever use it but hey in the design phase you have to live by the philosophy "Never Say Never".
+
+At the moment my idea for branching cutscenes involves splitting each cutscene into separate sequences instead of trying to use a master sequence with subsequences and disabling/enabling tracks. I mean I've seen some people talk about how that's possible online but it's like if there's no official docs you're running into that territory where you have to really dive into the source code and be ready to invest in it. I'm just a solo dev or I'd do it lol.
+
+Plus I mean it's probably neater just having separate cutscenes. So for our system you would typically branch cutscens by using the play cutscene trigger in the dialog graph. And when building a cutscene, if you want to associate a dialog with a cutscene to see the dialog text on your sections, you can use a guid to identify a starting point node that way you can start on a separate branch.
+
+There's also other nuances like hey we need to like preload the next cutscenes so it looks seamless, or load all of them at once. That's the part I'm still investigating. I mean atm you have to define a dialog graph but I have to spend more time testing this.
+
+The main thing is we have some designs for this idea so we're not completely screwed in the future if one day I'm really inspired and thing hey we need this.
+
+</div>
+</main>

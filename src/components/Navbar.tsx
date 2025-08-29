@@ -36,11 +36,11 @@ import Logo from "./Logo";
 }
 
 export default function Navbar(): JSX.Element {
-  const items = ["Game", "Story", "Tools", "Artwork", "About", "Contact"];
+  const items = ["Game", "Technical Docs", "Story", "Tools", "Artwork", "About", "Contact"];
 
   return (
     <header>
-      <nav class="flex gap-2 flex-wrap justify-center w-full h-20 pl-2 justify-between bg-black items-center text-gray-600">
+      <nav class="flex gap-2 flex-wrap justify-center w-full h-auto pl-2 justify-between bg-black items-center text-gray-600">
         <Logo />
         <Tabs items={items} />
       </nav>

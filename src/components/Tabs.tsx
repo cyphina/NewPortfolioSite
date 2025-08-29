@@ -20,7 +20,7 @@ export default function Tabs(props: TabsProps): JSX.Element {
   };
 
   return (
-    <ul class="flex flex-row gap-2">
+    <ul class="flex flex-row gap-2 flex-wrap">
       <Index
         each={props.items}
         children={(item) => {

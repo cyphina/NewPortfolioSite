@@ -107,7 +107,7 @@ export default function Gallery(props: GalleryProps): JSX.Element {
 }
 
 export function GameGallery() {
-  const images = import.meta.glob("/public/images/GameImages/*.jpg", {
+  const images = import.meta.glob("/src/images/GameImages/*.jpg", {
     eager: true,
   });
 
@@ -115,7 +115,7 @@ export function GameGallery() {
 }
 
 export function ToolsGallery() {
-  const images = import.meta.glob("/public/images/ToolImages/*.png", {
+  const images = import.meta.glob("/src/images/ToolImages/*.png", {
     eager: true,
   });
 
@@ -123,7 +123,7 @@ export function ToolsGallery() {
 }
 
 export function ArtworkGallery() {
-  const images = import.meta.glob("/public/images/artwork/*.png", {
+  const images = import.meta.glob("/src/images/artwork/*.png", {
     eager: true,
   });
 

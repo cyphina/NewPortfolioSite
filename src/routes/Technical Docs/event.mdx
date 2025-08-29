@@ -65,7 +65,9 @@ The interesting thing I built on top of the system is the debugger, and the even
 
 If you want to spawn something dynamically, you use the event flag component which will run a gameplay tag query against the tags in your container to control whether something is spawned in and out of the map. 
 
-There's also a custom event flag component that runs some logic based on if the gameplay tag query provided is satisfied which lets you control something besides spawning.
+There's also a custom event flag component that runs some logic based on if the gameplay tag query provided is satisfied which lets you control something besides spawning. You just add it to something in the world you want to control spawning with through event flag queries.
+
+The benefit of this is that you have this thing in the world you can ge a soft pointer reference to for your quests still but it's pretty much disabled or enabled only if the flags match. Ofc the tradeoff is you still spawn this thing and disable it so there's some memory usage. Probably could destroy it too instead of disabling it but the system is **reactive**, aka these things that are disabled can be enabled without having to script logic to turn it on since it reacts to the event flags changing.
 
 <img src="../images/GameImagesInline/EventFlagEnabler.png" alt="Event Flag Enabler"/>
 
