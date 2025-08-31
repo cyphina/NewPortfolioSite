@@ -77,7 +77,7 @@ The picture shows our NPC has a shop and a intimate component which means you ca
 These 3 components are backed by data assets that have static data relating to information like:
 
 1. For the intimate npc component - relationship level data (like the harvest moon hearts). Can have some event associated with improving the level, some kind of condition before leveling up, what gifts the person likes at this level, etc.
-2. For the shop component - list of items to sell and conditions on when they are unlocked. Since we didn't use observers here if the conditions are somehow met you have eto close and reopen the shopa which prompts the system to reevaluate them.
+2. For the shop component - list of items to sell and conditions on when they are unlocked. Since we didn't use observers here if the conditions are somehow met you have to close and reopen the shopa which prompts the system to reevaluate them.
 3. For the conversation component we have a mapping from gameplay tag to soft object pointer for dialog cause basically NPCs are supposed to say something when you ask them about a topic similar to Shadowrun SNES.
     1. Could probably expand on this since the mapping value never changes. Probably want to setup `RTSEvent` to change them based on gameplay state.
 
