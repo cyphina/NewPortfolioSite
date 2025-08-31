@@ -81,6 +81,8 @@ These 3 components are backed by data assets that have static data relating to i
 3. For the conversation component we have a mapping from gameplay tag to soft object pointer for dialog cause basically NPCs are supposed to say something when you ask them about a topic similar to Shadowrun SNES.
     1. Could probably expand on this since the mapping value never changes. Probably want to setup `RTSEvent` to change them based on gameplay state.
 
+>The data assets are used since we might create several versions of the NPCs and swap out their look but we can reuse the data asset to reuse the item lists or use inheritance on them to expand upon what an NPC is selling as the game progresses.
+
 Here's what the conversation topic picker looks like. Since it's based off gameplay tags it has hierarchical navigation like this picture shows options in "Dialog.Quest.", and we populate the options by looking at the gameplay tag tree.
 
 <img

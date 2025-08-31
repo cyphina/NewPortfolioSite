@@ -1,3 +1,4 @@
+import App from '../../app';
 <main>
 <div class="m-2 mdx-content">
 
@@ -22,7 +23,7 @@ When most people think of standout cutscene systems, they probably jump to block
 
 I’m not chasing spectacle. I’m chasing stories built on raw emotion and flawed people, not polished tropes or perfectly lit monologues. The kind of stories you find in hidden gems. The ones that aren’t trying to appeal to everyone, and the ones that try to say something even if they're not perfect (as opposed just leaving you with philosophical ideas).
 
-Games like Star Ocean 2 and Treasure of the Rudras, or stories like Yamikin Ushijima-kun or Memories of Matsuko — they don’t care about being clean or crowd-pleasing. They’re awkward, specific, sometimes a little ugly. But they hit deeper cause I think they capture lived experiences. That's something I believe is unique to individuals in contrast to philosophical ideas which many people think about even if they don't have the means to share them in some media form.
+Games like Star Ocean 2, Tokyo Mirage Sessions, Treasure of the Rudras, or stories like Yamikin Ushijima-kun or Memories of Matsuko — they don’t care about being clean or crowd-pleasing. They’re awkward, specific, sometimes a little ugly. But they hit deeper cause I think they capture lived experiences. That's something I believe is unique to individuals in contrast to philosophical ideas which many people think about even if they don't have the means to share them in some media form.
 
 >I still used some games that have more standard stories like Xenoblade X as a reference.
 
@@ -51,6 +52,8 @@ That’s the kind of energy I wanted to capture. So I set out to build a cutscen
 	1. Need to be able to specify this with a normalized curve.
 9. Skip Menu (all clients need to confirm on multiplayer).
 	1. Like Xenoblade X it can only skip to the next choice.
+10. Cutscenes where the actors can depend on the party members you chose.
+11. Some things that occur in the cutscene might impact the game world even after the cutscene is finished (NPC keeps blocking the way).
 
 To meet these requirements I did some investigations into what Unreal provided and I have a technical breakdown of how I can get most of the way to meeting these requirements using Sequencer, Take Recorder, and the Dialog System I built on top of [NotYet's dialog plugin](https://github.com/NotYetGames/DlgSystem) (as always thanks a lot to them for open sourcing it 😊). 
 
@@ -111,6 +114,20 @@ Plus I mean it's probably neater just having separate cutscenes. So for our syst
 There's also other nuances like hey we need to like preload the next cutscenes so it looks seamless, or load all of them at once. That's the part I'm still investigating. I mean atm you have to define a dialog graph but I have to spend more time testing this.
 
 The main thing is we have some designs for this idea so we're not completely screwed in the future if one day I'm really inspired and thing hey we need this.
+
+### Cutscene And Gameplay Connection
+
+There's two main connections in my requirements. First off is having the party members the players picked be in the cutscenes. Late in the game the player is given the freedom to pick from an assortment of party members to fulfill missions so this is dynamic and thus we have to use the Sequencer's dynamic possession.
+
+This also provides some limitations on when we can use re-rendered movies. If we had the same party members we could just render our movies in another level and then play the output in a movie track. But now we have to spawn the entire level or keep it always streamed and use a level visibility track.
+
+So depending on the constraints at hand I use one of the three approaches of re-rendered movies, always streamed levels with a level visibility track, or streaming the level in before playing the cutscene.
+
+---
+
+And when you need state from the cutscene to persist like you spawn many enemies and you want them to activate after the cutscene, there's the feature in the sequencer to not reset the sequencer state.
+
+If for some reason we want to do gameplay setup post cutscene I put this in the static data associate with a cutscene. I have a list of triggers I can run after the cutscene, and I can do things like run some logic to possess the pawns that were spawned during the cutscene.
 
 </div>
 </main>
