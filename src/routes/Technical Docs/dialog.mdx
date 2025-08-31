@@ -1,7 +1,99 @@
 <main>
 <div class="m-2 mdx-content">
 
-# TODO
+# Dialog and NPCs
+
+## Overview
+
+Before I talk about motivations lets talk about what we'll be showcasing:
+
+1. Extension of NotYet dialog system to use my [data driven primitives](/event).
+2. Multiplayer validation.
+3. Shadowrun (SNES) type dialog topic system.
+4. NPCs with systems like intimacy, shop, initial dialog overrides, etc.
+
+### Motivations
+
+Since Up is a narrative driven RPG it needs dialog. But there's some challenges like:
+
+1. You control up to 4 Heroes who can talk to NPCs.
+2. It's a multiplayer game.
+3. Typical dialog stuff like branching, conditionals, triggers.
+
+I think the tool that I used for inspiration when it came to gathering requirements was some visual novel dialog editor that wasn't graph based like Godot's [Dialogic](https://github.com/dialogic-godot/dialogic). Actually now that I realize it, that inspired my non-graph based [quest editor](/quest)...
+
+I also wanted to make NPCs where you could gain reputation with them. But instead of a full fledged zero sum game reputation system I just decided to keep things simple and use the TWEWY model where you can only gain friendship points with NPCs and unlock stuff including more items you can buy from them.
+
+### Typical Dialog Stuff - NotYet Dialog System Integration
+
+The [NotYet Dialog System](https://github.com/NotYetGames/DlgSystem) plugin is something for a while now. I decided to use it instead of rolling my own graph editor cause I didn't want to learn how to spend months trying to maintain my own implementation.
+
+In the tool I had to make a few edits to the source code to integrate my own [data driven primitives](/event). Basically I found the places where the existings system used conditions and replaced them with mine, and added triggers for each node which you can direct towards the speaker associated with the node.
+
+We also added some custom keybindings to be able to focus specific fields on a node so you don't have to click as much. And I added support for copy pasting parts of my markdown script to create nodes. I think this is shown in a video I made under the [sequencer article](/sequencer).
+
+## Dialog
+
+### Handling Dialog With 4 Heroes
+
+The game is designed such that each player can split up control between four heroes. If you're playing singleplayer then you need to be able to micro, which I'm hoping we ramp up the difficulty enough such that people can become stronger at that by the end of the game. Or players can just play easy mode to probably stomp and grind their way through any problems (that's not implemented yet).
+
+Each player can only initiate one dialog at a time. When they're in a dialog players are blocked from controlling their characters. They cannot start a dialog when any enemy is in aggro mode, and players cannot start two dialogs at once since a dialog is considered a blocking interaction.
+
+Here's the debugger you can use to check the blocking interactions of each player. And circling the aggro mode indicator in that picture which periodically checks if any enemies are not running their passive behavior mode trees (see [Ai article for more info on that](/ai)).
+
+<img
+  src="../images/GameImagesInline/DialogInteractionDebugger.png"
+  alt="Dialog Interaction Debugger"
+/>
+
+The aggro indicator turns red when there's at least one monster in aggro mode. You can probably find a picture in some gallery that showcases combat.
+
+### Multiplayer
+
+My games multiplayer still has a lot of testing to undergo, but to keep things simple I've decided that the main way to play our game will be ina listen server setup. I still try to gate code that wouldn't run in a dedicated server just out of gameplay habit but I'm not going to try to test that anytime soon if ever.
+
+In the listen server setup one player hosts, and others join (typically your friend). The host is the authority in what's real, and I'll explain what that means for the dialog system for a setup by first talking about **important dialogs**.
+
+An important dialog is one that can trigger a one-time game state change. When a dialog is important then players have to vote to view it together, and the host has the final say on the choices that affect the world since in the listen server setup everyone is just helping the host's file.
+
+---
+
+I mentioned that if important dialogs aren't repeatable but there can be repeatable dialogs which choices and conditions that still have to be validated to the server, which is why each pawn for the standard RTS game type has a `UDialogLiasonComponent` that communicates with the server about choices made . And while clients can cheat and see any kind of dialog they can't like change the game state in unintended ways since the server will track the path in the dialog the client takes and ensures that we only run triggers for nodes if we meet the conditionals and have walked the proper dialog path in the graph to.
+
+## NPCs
+
+So I mentioned in Up we have some really basic NPCs which can do things like sell you items or you can gain favoritism with them. The way you do this in the game is we have two components - a shop component and a intimate NPC component. There's also a conversation component for a system I'll explain later that still needs to be fleshed out.
+
+If you talk to an NPC with either of these components after the initial dialog a menu opens up with more options based on what components were added:
+
+<img
+  src="../images/GameImagesInline/TalkNPC.png"
+  alt="Talking to NPC"
+/>
+
+The picture shows our NPC has a shop and a intimate component which means you can gift it stuff. That just opens up a screen that shows you relationship points and  you can then open your backpack up and click items to gift.
+
+These 3 components are backed by data assets that have static data relating to information like:
+
+1. For the intimate npc component - relationship level data (like the harvest moon hearts). Can have some event associated with improving the level, some kind of condition before leveling up, what gifts the person likes at this level, etc.
+2. For the shop component - list of items to sell and conditions on when they are unlocked. Since we didn't use observers here if the conditions are somehow met you have eto close and reopen the shopa which prompts the system to reevaluate them.
+3. For the conversation component we have a mapping from gameplay tag to soft object pointer for dialog cause basically NPCs are supposed to say something when you ask them about a topic similar to Shadowrun SNES.
+    1. Could probably expand on this since the mapping value never changes. Probably want to setup `RTSEvent` to change them based on gameplay state.
+
+Here's what the conversation topic picker looks like. Since it's based off gameplay tags it has hierarchical navigation like this picture shows options in "Dialog.Quest.", and we populate the options by looking at the gameplay tag tree.
+
+<img
+  src="../images/GameImagesInline/DialogWheel.png"
+  alt="DialogWheel"
+/>
+
+And here's what it looks like to edit the static data associated with a shop component:
+
+<img
+  src="../images/GameImagesInline/NPCStaticDataShop.png"
+  alt="NPC Static Data Shop"
+/>
 
 </div>
 </main>

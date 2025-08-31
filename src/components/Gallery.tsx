@@ -99,7 +99,7 @@ export default function Gallery(props: GalleryProps): JSX.Element {
       </div>
       <div class="mt-1 mb-4 mx-8 border-solid border border-gray-800">
         <div class="text-center text-sm m-1">
-          Click on the Gallery to see a navigation bar that can let you change the Picture. Sliding might be a bit awkward on mobile.
+          Gallery Might take Some Time to Load. Click on the Gallery to see a navigation bar that can let you change the Picture. Sliding might be a bit awkward on mobile.
         </div>
       </div>
     </div>

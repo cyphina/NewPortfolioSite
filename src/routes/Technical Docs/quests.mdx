@@ -11,6 +11,8 @@ In Up, a quest is made using the editor creation widget in which you specify the
 
 You fill out the data about what the player has to do in the quest in these quest objective files. You can see that we setup custom details for these quest objectives to add some spacing and color highlighting to the most important things. We've also renamed some rows to let you be able to search for important quest information using keywords (like 1-1 to look at objective 1 goal 1 or something). 
 
+>You can still connect objectives together in a graph. That will be shown below. But I think I was inspired to make a tool that involves filling out a form top down instead of a graph by that godot tool [dialogic](https://github.com/dialogic-godot/dialogic).
+
 To understand more I have to explain the quest terminology:
 
 Each quest contains **objectives**. Each objective acts as a step in the quest, and each objective can contain multiple **subgoals**.
@@ -89,7 +91,7 @@ This picture shows a blueprint script where you can make a flowchart and check v
 
 #### Example
 
-If you scroll back up to that quest details iamge, you can see there's sa talk goal 0-2-0 that has a "Dialog Event Tag to Listen For". Well that lets us only finish the goal if we hit a specific part of a dialog tree. In this dialog picture I'll show below you have to choose the first option to lead to some event being fired to complete goal 0-2-0.
+If you scroll back up to that quest details image, you can see there's a talk goal 0-2-0 that has a "Dialog Event Tag to Listen For". Well that lets us only finish the goal if we hit a specific part of a dialog tree. In this dialog picture I'll show below you have to choose the first option to lead to some event being fired to complete goal 0-2-0.
 
 <img src="../images/GameImagesInline/DialogBranchingGameplayEvent.png" alt="Dialog Branching Gameplay Event"/>
 
@@ -129,7 +131,9 @@ They key differences are:
 
 ## Objective Graph
 
-If you want to design a quest where the next objective you go to depends on specific goals you complete, you can do that. Each goal has a field that you can specify when you complete it what objective to move onto next. Since each objective is some inlined UObject4 we had to id it with a GUID. 
+If you want to design a quest where the next objective you go to depends on specific goals you complete, you can do that. 
+
+Each goal has a field that you can specify when you complete it what objective to move onto next. Since each objective is some inlined UObject4 we had to id it with a GUID. 
 
 And then there's an editor extension I made that shows a dropdown for each goal and you can see the GUIDs of every objective. Just pick one to link from one goal to an objective. 
 
