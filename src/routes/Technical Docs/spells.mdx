@@ -1,7 +1,54 @@
+import App from '../../app';
 <main>
 <div class="m-2 mdx-content">
 
-# TODO
+>WIP
+
+## Motivations
+
+I forgot how I found GAS but it was before there was as great [guide on Github](https://github.com/tranek/GASDocumentation). I did a lot of things wrong and had to rewrite a lot based on the guide but I think one thing that stood was how I composed logic.
+
+For background Unreal's Gameplay Ability System provides a framework for you to create intricate abilities. If you had to build a complex ability system like Dota 2 you could take months trying to break down all the concepts and designing the program and probably just as long implementing it. GAS gets you a lot closer, but because it's supposed to support creating ability systems for any game there's a lot of work necessary to be done on it to make it scalable for your own game.
+
+For example if we look at like a [data driven ability](https://developer.valvesoftware.com/w/index.php?title=Dota_2_Workshop_Tools/Scripting/Abilities_Data_Driven_Examples&uselang=en) in Dota 2 we can see it might not be like the easiest thing to build since you need tto know a lot of fields to fill out via text (which isn't too bad since I mean you can at least diff it) but it's easier to maintain than rebuilding the same kind of skills in gas since you can easily copy paste the text and have some base behavioral guarantees whereas copying blueprints means you have to mirror changes.
+
+So the goal for this article is to show some of the tools we use for composability to let us make skills with as much variety as Dota 2 but also make sure we can do this without having to sacrifice ease of use or maintainability.
+
+## Overview
+
+In this article we'll try to briefly go over these techniques used to make the spell system logic maintainable:
+
+1. Chained Effects
+2. Effect Tags and Icons
+3. Generic Effect Blueprints
+4. Spell Templates
+5. Combination Spell Logic
+6. Gameplay Effect Volumes (GEVs)
+
+And I'll discuss a bit about what the current system provides to let you get a gauge of the complexity so you know what someone using these techniques can build comfortably.
+
+### Features
+
+I'm probably going to overhaul this section and when I have some time take some video clips for the spells since in Up there's an enable enemy control we can use to recreate the scenarios that showcase effects better.
+
+**Complex Spells**
+
+<img src="../images/GameImagesInline/WaterWall.png" alt="Water Wall"/>
+
+Water wall spell reduces damage of bullets that pass to it. Casting it requires vector targeting like Dota 2 Dark Seer Wall.
+
+<img src="../images/GameImagesInline/VoidWalk.png" alt="Water Wall"/>
+
+Void walk lets you become untargetable but you can't attack or cast spells. A lot like Dota 2 Ringmaster's Escape <Act>
+
+There's shield effects that affect many allies like Dota 2's pipe. There's shields that heal you while they are active and if they're broken prematurely (by taking a certain amount of damage) they dissapear and the heal effect stops.
+
+There are spells where you can create an expanding volume the longer you channel and have to press the spell again to stop.
+
+** More Intricate Purging and Effect Immunity System **
+
+
+</Act>
 
 </div>
 </main>
