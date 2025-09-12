@@ -1,8 +1,6 @@
 <main>
 <div class="m-2 mdx-content">
 
->WIP
-
 ## Motivations
 
 I forgot how I found GAS but it was before there was as great [guide on Github](https://github.com/tranek/GASDocumentation). I did a lot of things wrong and had to rewrite a lot based on the guide but I think one thing that stood was how I composed logic.
@@ -13,16 +11,16 @@ For example if we look at like a [data driven ability](https://developer.valveso
 
 So the goal for this article is to show some of the tools we use for composability to let us make skills with as much variety as Dota 2 but also make sure we can do this without having to sacrifice ease of use or maintainability.
 
+Specifically since a lot of logic for these spells are in blueprints (usually staring out we use that before we make template spells - explained later) the goal for maintainability is to find a way to reduce the number of nodes needed to program  spell logic.
+
 ## Overview
 
 In this article we'll try to briefly go over these techniques used to make the spell system logic maintainable:
 
 1. Chained Effects
 2. Effect Tags and Icons
-3. Generic Effect Blueprints
-4. Spell Templates
-5. Combination Spell Logic
-6. Gameplay Effect Volumes (GEVs)
+3. Spell Templates
+4. Gameplay Effect Volumes (GEVs)
 
 And I'll discuss a bit about what the current system provides to let you get a gauge of the complexity so you know what someone using these techniques can build comfortably.
 
@@ -30,11 +28,17 @@ And I'll discuss a bit about what the current system provides to let you get a g
 
 >I'm probably going to overhaul this section and when I have some time take some video clips for the spells since in Up there's an enable enemy control we can use to recreate the scenarios that showcase effects better.
 
-** Elemental Stat System **
+**Elemental Stat**
 
 Just like in the flash game [Sonny 2](https://armorgames.com/play/2900/sonny-2/) there's a whole elemental piercing and resistance system. When it comes to damage and healing these become important criteria, but since they're stats there's a whole level of depth. You don't just want to target an enemy that has low resistance to an element, what matters is the difference between elemental affinity and resist. So you have to train different characters who specialize in elements or can equip equipment that can really buff up your elemental affinity to maximize that gap.
 
-Same thing goes for healing - every character in the game has some healing abilities. And you want to switch up who the healer is based on your defense your capitalizing on. Because the higher elemental resistance the weaker heals of that element are on the target.
+Here's a graph of the damage multipliers you get when your elemental affinity is larger/smaller than the target's resistance stat. For example if your fire affinity is like 10x larger than the target's fire resistance they would take around 3.2x extra damage from fire magic. And if the target's fire resistance is 10x larger than your fire resistance you would deal around 0.32x damage from your fire spells.
+
+<img src="../images/GameImagesInline/ResistanceVsAffinity.png" alt="ResistanceVsAffinityGraph"/>
+
+One kind of weird thing about the game - the same system applies to healing. That's why very most characters in the game has some healing abilities. 
+
+>Throughout the game you're going to want to stack up resistance against the element of the enemies you are fighting. But that also means you want to make sure your healer uses magic of an element you have a low resistance to else they will heal you for much less fufufu.
 
 **Complex Spells**
 
@@ -44,17 +48,135 @@ Water wall spell reduces damage of bullets that pass to it. Casting it requires 
 
 <img src="../images/GameImagesInline/VoidWalk.png" alt="Water Wall"/>
 
-Void walk lets you become untargetable but you can't attack or cast spells. A lot like Dota 2 Ringmaster's Escape Act.
+Void walk lets you become untargetable but you can't attack or cast spells. A lot like Dota 2 Ringmaster's Escape Act (I might've somehow screwed up the system that automatically resets the visuals for these mesh material changing spell when the spell is removed but you get the idea).
 
-There's shield effects that affect many allies like Dota 2's pipe. There's shields that heal you while they are active and if they're broken prematurely (by taking a certain amount of damage) they dissapear and the heal effect stops.
+<video width="100%" controls>
+  <source src="../VoidWalk.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
-There are spells where you can create an expanding volume the longer you channel and have to press the spell again to stop.
+"Brain freeze" silences the enemy for a few seconds and if the effect expires without being purged it applies another debuff which causes the enemy to take damage based on their own intelligence whenever they cast a spell.
+
+<video width="100%" controls>
+  <source src="../BrainFreeze.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+There's shield effects like "BlessingOfTera" that affect many allies like Dota 2's pipe. There's shields that heal you while they are active and if they're broken prematurely (by taking a certain amount of damage) they dissapear and the heal effect stops.
+
+<video width="100%" controls>
+  <source src="../BlessingOfTera.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+There are spells where you can create an expanding volume the longer you channel and have to press the spell again to stop. Here's "Reverent Curse" which creates a volume where you can enter and get a debuff. It slowly wears off if you leave the area, but if you reenter the duration is refreshed:
+
+<video width="100%" controls>
+  <source src="../ReverentCurse.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 ** More Intricate Purging and Effect Immunity System **
 
 If you play Dota 2 you know in terms of purging there's a weak and strong dispell. There's also magic immunity that blocks most abilities effects. It's like a set list of abilities and the criteria is typically "Do I pierce or not pierce magic immunity?"
 
 In Up there's entire stats each active effect has dedicated to effect immunity and also effect purging resistance.
+
+## Organizational Strategies
+
+### Spell Templating
+
+Most spells with reusable logic are made into templates where we can just control basic functionality through data driven approaches like just filling out the details panels. Typically I do this when I find patterns between spells like a lot of spells just you target a unit and some effects apply to it so we need a spell template called "Direct Spell".
+
+Then there are a class of spells that turns the unit into someone who can walk into other units and apply effects to everyone it passes into. We call that spell template "SelfColliderAbility".
+
+And then there are spell templates for spells where we have to setup observers since we apply a shield to a target and as long as that shield is on the target (since it can expire or break from attacks) we might have an effect applied. That is the "Barrier" template.
+
+<img src="../images/GameImagesInline/BarrierSpellTemplate.png" alt="Barrier Spell Template"/>
+
+### Spell Chaining 
+
+Spell chaining is how we are able to compose gameplay effects.
+
+Imagine you're trying to recreate Sven's Storm Hammer in Dota 2. It's a projectile that damages a target and stuns it.
+
+What if we want to recreate this for Up? Our game's mechanics makes this slightly different since in our game we have a dodge stat. If the unit dodges our spell then we won't apply the stun. 
+
+>When I say dodge I'm not just talking about dodge in terms of like disjointing but also in terms of like the inherent dodge roll.
+
+My first approach was to create separate gameplay effects. One damage effect, and then one stun. Apply the first and then if you hit apply the stun. It works but it's kind of annoying how many times you have to create effects, setup targets and use the ApplyGameplayEffectSpec to some target.
+
+But then I wanted to make some spell that deals damage over time and then stuns. Say the spell is called "Poisonous Stun". 
+
+To implement this I make two effects, but this time both has durations.
+
+But in our game we have a purge system. If our one desired effect "Poisonous Stun"  requires two separate gameplay effects we need a way to make sure our purge logic will somehow consider both effects as one unit.
+
+So I decided at first ok let's just give both the same name tag to each effect "Poisonous Stun". And any logic we need to iterate over effects, we'll consider effects with the same as one unit. For example the purge system will need to remove both the stun and the DOT since they might have the same name gameplay tag "Poisonous Stun".
+
+Now in practice implementing this would be annoying since we iterate over the effects for different reasons. Sometimes you want to remove something so you have to find all the effects with matching names. Sometimes you want to just see if we have a certain effect and as soon as you find one with that name you skip the rest of the similarly named effects.
+
+Since I had no idea about how such a change would impact the entire gameplay effect system I decided to try and do something else instead that emulates it. I created the chained effect system where you have a main effect, and chain another effect which has a lifetime dependent upon the main effect. There's a lot of nuances to setting up the system including making sure each chained effect has a chained effect tag that you ignore when iterating over effects to show effect icons and other stuff. There's also making sure when you apply the main effect you apply the chained effects too to prevent having to write multiple "apply gameplay effect spec" nodes.
+
+But the jist is I setup some listeners for `OnGameplayEffectRemoved_InfoDelegate` where we run logic to remove each chained effect when the main effect is removed.
+
+Here's what the setup looks like for the ability "Iron Maiden" which stuns the target, reduces how much damage it takes, but deals absolute damage over time to it (damage not affected by damage reduction). If we purge the effect both the stun and the DOT will be cleared.
+
+<img src="../images/GameImagesInline/ChainedEffect.png" alt="Chained Effect"/>
+
+In this blueprint you can also notice that we have **reusable effects** like `RTSDOTEffect` for various `GameplayEffect`s that can be parameterized - that way we can prevent having to make effects for every single aspect of one larger effect.
+
+We still make one unique new `GameplayEffect` for each effect a spell can inflict instead of reusing them. These unique effects typically have their own set of asset gameplay tags like a name tag, an element tag, and a tag that marks some effect if it has as duration as a buff or debuff so we can use the purge system to purge buffs off enemies or debuffs of allies. But when chaining we typically chain to or chain on at least one reuseable effect.
+
+### Gameplay Effect Volumes (GEVs)
+
+When I want to create some ability that deals damage instantly to units in an AOE typically I use multi shape traces. I don't really use the wait target data stuff since I already have my own system in the game to handle the whole targeting phase of clicking on units, vector targeting, AOE targeting ground or a unit, etc. I might try it out for another game.
+
+But if I need to make some kind of ability where it spawns some lingering area that can cause effects to an enemy like a poisonous cloud, we use **Gameplay Effect Volumes** or GEVs. We have many reusable types like when we want to create not just a pudge hook that does a moving sphere trace, but one that has a lingering line behind it that you can walk into and get captured (the chain type GEV).
+
+GEVs do things like:
+
+1. Own its own collision shape (it can expand/shrink and that logic would be in the GEV instead of the spell so we can reuse that type of GEV for different spells).
+2. Knows how long it should live.
+3. Apply effects when actors enter.
+4. Optionally remove effects when actors leave.
+5. Handles  re-procs and multiple effect entries.
+
+It has an API like:
+
+1. DrawDebugIndicator() - Lets us draw something during the incantation phase of a spell to do telegraphs or lets us draw a simple debug draw to debug our GEV.
+2. GetClosestPointOutsideArea() - Help AI dodge spells.
+3. CheckIfPointInsideArea() - Pathfinding checks.
+
+In the example videos above Reverent Curse is an example of a GEV and thanks to GEVs and spell templating all the logic we need in the ability is:
+
+<img src="../images/GameImagesInline/ReverentCurse.png" alt="ReverentCurse"/>
+
+And the special GEV for Reverent curse is just a derivation of `UpGEVSphere`. It only has some logic to help size it based on the particle effects it used.
+
+### Reactive Effects
+
+A **Reactive Effect&& is a term I coined where we have an effect that needs to react to events happening. When I say effect here it's the concept of an effect as we consider it in most games, but not actually a gameplay effect. Let me explain with an example.
+
+If you saw in the video I posted above to showcase the effect called "Brain Freeze", we have this "effect" that is applied to an enemy and it deals damage whenever that enemy calls the spell while the effect is active.
+
+Standard `GameplayEffect`s in GAS handle things like number, tags, durations. They can have some limited logic with calcs but these are generally stateless and storing state for them involves tying that state to some construct that's persistent to the effect's lifetime (like storing data on the `AbilitySystemComponent` itself during the effect). But that's annoying cause then you're storing data for an effect somewhere outside of the effect which induces coupling.
+
+So to implement some logic where we want to observe things while an effect is active, instead we expand the ability that applies the effect to have these listeners. I call this pattern  "Reactive Effects" which is a bit confusing since while players think of them as effects, we would have to implement them using observers in the abilities.
+
+Now I'll show how it looks like to implement this system in blueprints. A lot of work is under the hood in C++ in the function called `AddCallbackToEffectRemoval` which I'm keeping as proprietary information. It has to be able to setup events you can use in blueprint to react to when the effect is removed. But you can kind of see the kind of setup a designer would use to implement this with the ability brain freeze which as a reminder, does two things:
+
+1. Silences enemy for like 4/5/6 seconds based on level.
+2. When the effect ends (and isn't removed prematurely) it applies a debuff "Mind Break" lasting for 5/6/7 seconds based on the level that deals some percentage of the target's intelligence to the enemy anytime it finishes incanting a spell.
+
+>Spells that scale on the enemy's stats can be really strong (think foul play in pokemon) thus it's a pretty niche tool to bring a long especially if you fight things much stronger than yourself. Granted in Dota 2 E-Blade feels a bit funky ever since it scales off the target's stats...
+
+<img src="../images/GameImagesInline/BrainFreeze1.png" alt="BrainFreeze1"/>
+<img src="../images/GameImagesInline/BrainFreeze2.png" alt="BrainFreeze2"/>
+<img src="../images/GameImagesInline/BrainFreeze3.png" alt="BrainFreeze3"/>
+<img src="../images/GameImagesInline/BrainFreeze4.png" alt="BrainFreeze4"/>
+
+One important thing not shown is the observer setup we do collects the observers in a list to clear them out on `EndAbility` if somehow this ability premature ends w/o the effects.
 
 </div>
 </main>
