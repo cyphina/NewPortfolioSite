@@ -36,7 +36,7 @@ import Logo from "./Logo";
 }
 
 export default function Navbar(): JSX.Element {
-  const items = ["Game", "Technical Docs", "Story", "Tools", "Artwork", "About", "Contact"];
+  const items = ["Game", "Technical Docs", "Story", "Tools", "Artwork", "About", "Downloads", "Contact"];
 
   return (
     <header>
