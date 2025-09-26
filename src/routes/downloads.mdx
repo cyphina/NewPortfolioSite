@@ -4,15 +4,105 @@ import { A } from "@solidjs/router";
   <div class="m-2 mdx-content">
     # Game
     
-    Here's the <A href="https://drive.google.com/file/d/1DWw_bENILRa3-dXPbbT7-QQwSy8bmpDF/view">download link</A> for the game.
+    Here's the <A href="https://drive.google.com/file/d/1kpiYLlhecsR9r6WYfV4fbdgrfkJkUvtx/view?usp=sharing">download link</A> for the game.
 
-    The contents of the link has a zip file (called `Windows.7z` since it's a packaged Windows shipping build) and there's a folder with an executable `MyProject.exe` you have to run to play the game.
+    The contents of the link has a zip file (called `Up<BuildNumber>.7z` since it's a packaged Windows development build) and there's a folder with an executable `MyProject.exe` you have to run to play the game.
 
-    Still fixing a lot of bugs with it especially since I haven't tested the shipping build very much. Especially some bugs surrounding like cutscenes, save/load, quitting, etc.
+    Still fixing a lot of bugs with it especially since I haven't tested the shipping build very much. Especially some bugs surrounding like cutscenes, save/load, quitting, AI, etc.
 
-    There's even some bugs with AI I found in a standalone development build I'm still fixing.
+    I would recommend checking task manager and using that to close the game cause I've seen the game linger even when you quit via the ingame buttons.
 
-    Also a lot of UX improvements to be made but if you play it you can technically see everything I made in the video.
+    Also there are  a lot of UX improvements to be made but if you play it you can technically see everything I made in the video.
+    
+    # Testing
 
+    Here is some information that can help when playtesting the game if you get stuck because of some bugs.
+
+    ## Up Commands
+
+There's probably many commands I forgot to write down here but a lot of important ones to testing (both Unreal and Up specific) are listed here.
+
+> Remember need to put things in quotes when you have spaces
+
+Some commands requires some kind of gameplay tag. I'll put a link to the list somewhere.
+
+### General
+`Up_TeleportUnit(UnitTypeTag, X, Y, Z)` - Teleports a unit to a specific position or if you don't pass anything for X Y and Z then it teleports to the ground spot obtained from tracing a ray in the direction of the camera.
+`Up_TeleportSelectedUnitsToCursor` - Teleports selected units to the location under the cursor.s
+
+### Cutscenes
+`Up_OverrideSpeedOfUnitType "WorldObject.Hero.Cyphina" 100` - Lets you override the movement speed of some kind of unit.
+
+### Editor
+`UpLogsOnly` - Shows only logs from our various Up categories (ones starting with Up_*). We need to update this list in `FMyProjectEditorModule::ShowOnlyUpLogs` if we have new log categories since it's a manual list.
+
+It also forces the game to clear logs in PIE.
+
+### Moving
+`Up_ShowPaths 1` - Can help debug pathfinding. It draws out the paths and some movement vectors.
+`Up_UsePartialPaths` - Activate/Deactivate partial paths.
+
+### Items
+
+`Up_AddItem(int itemId, int itemCount, int heroIndex)` - Provide an item to some hero in the party.
+
+### Vision
+
+`Up_SeeAll` - Disables the hiding and showing of units through the vision system. Doesn't disable the vision system's effects on gameplay.
+
+### Quests
+
+`Up_QuestTrackNew` - Tracks a quest(the goals are activated aka you can make progress towards it) if the current objective takes place at the current location.
+`Up_QuestStopTrack` - Stops tracking a quest.
+`Up_QuestFinishSubgoal QuestName.MainStory.CleaningEvernaWater 0` - Finishes some subgoal of any quest even if it's not tracked.
+`Up_QuestFinishPrimarySubgoal GoalIndex bReturnToWorldMap` - For the currently tracked quest, will finish a goal of index `GoalIndex` and returns to world map if the second parameter is true.
+`Up_QuestFinish QuestNameTag` - Finishes a quest. 
+`Up_QuestAddAndStartTracking` - Shorthand for adding a quest and starting to track it if in the location associated with the quest objective that you would be on when starting the quest.
+`Up_QuestAdd` - Add a quest. Can now access the location associated with starting objective in the world map.
+
+### Level Transitions
+
+### E2E Testing
+`Up_SetupTestScenario` is a command that you can run from `RTS_Level_WorldMap` to test out some basic flows like gaining quests and transitioning to levels as you progress the quest. It does a lot of setup behind the hood like setting up the next story chapter, etc. It also turns off the "Unlocking" gate which means you can spawn all heroes and items in the playground.
+
+>If you want to use the location list at all you need to run this command or use `ConsoleVariablesEditor::SetConsoleVariableByName_Bool("net.AllowPIESeamlessTravel", true)` else expect some quest data like objectives to be null since the game state will be destroyed and recreated.
+
+>When doing standalone testing in a world not accessed through the world map we want to use the node `SetupNonWorldMapStartingPoint`.
+
+### AI
+* `Up_AiUpdateInterval` - Updates how often behavior tree components and ai logic loops update for Units. Internally this actually just affects the delay between query actions, but it doesn't work for other types of tasks.
+* `Up_EnableEnemyAI` - Starts/stops all behavior tree
+* `Up_ToggleEnemyAI` - Toggles enemy ai on/off.
+* `Up_TogglePauseEnemyAI` - Toggles enemy ai paused/resumed.
+* `Up_Debug_EnableEnemyControl` - Enables enemy control. You can click on an enemy and tell it what to do which stops its AI and basically lets you control it like an allied unit.
+* `Up_Debug_DamageValues` - Used to log calculations done by the damage system.
+* `Up_SeeAll` - Essentially disables the vision system.
+* `Up_DrawLeashSpheres` - Draws spheres showing leash component data.
+* `Up_Debug_DrawTargeting` - Draws a sphere at every unit's target location. Alo draws some things related to chase.
+* `tracetag Up_AIChase` - Draws some debug information about AI chases.
+* `Up_LogAsyncSteps` - Logs all action steps taken. If you want to see info for a specific enemy use the output log filter.
+
+### Combat
+* `Up_RefreshSpells` - Refreshes cooldowns for all units.
+* `Up_BuffAllHeroesStats` - Makes all heroes have really high stats.
+* `Up_ShowSpellHitboxes` - Used for debugging gameplay effect volumes.
+* `Up_DamageUnit` - Can some named unit with a damage amount. Should ignore all damage calculation stuff.
+* `Up_ShowSpellHitboxes` - Draws hitboxes for spells (basically draws them for `AGameplayAbilityTargetActor` when using `WaitTask` in abilities).
+* `Up_Debug_SpawnInformation` - Draws information about spawners.
+
+### Visualizations
+* `Up_DrawMarkerAtPoint` - Lets us draw a sphere at some location.
+* `Up_DrawMarkerAtPointString` - Version that lets us just paste in output from visual studio like (you need to add quotes for some reason though) - `"{X=853.63168604529312 Y=-415.33435698723883 Z=-5.8798887039301917e-06}"`
+* `Up_ShowBoxesOnUnits` - Lets us draw AABB boxes around all units even if they are hidden. Also draws a sphere at their actor position (which should be their feet - fix if not).
+
+## Unreal Commands
+
+### Input Testing
+`showdebug Input` - Lets us view the input stack (highest is low priority). Yellow color means component processes and handled input but does not consume it. Red means component consumes input and stops propagating.
+`showdebug enhancedinput`
+`Up_Debug_PrintMouseHover` - Prints name of whatever the mouse is hovering over.
+
+
+>Typically we'll see our pawn missing from the stack if input isn't working.
   </div>
 </main>
