@@ -5,9 +5,13 @@
 
 ## About Me
 
-Hey I am Nam Ha aka Zi. I think the roles I play most are as a developer, designer, and writer. I like developing systems for games, sometimes things designed by others like when I was a UI programmer. I also like making tools to create things more efficiently for games with an emphasis on gameplay assets (creating AIs, enemy data, spells, etc.).
+Hey I am Nam Ha aka Zi. I think the roles I play most are developer, designer, and writer. I like developing systems for games, and sometimes I make things designed by others like when I was a UI engineer at Zenimax Online Studios. That was my job for the last four years until the third-person shooter MMO I worked on got canceled. 
 
-In my personal time I like designing some ideas for a game - particularly thinking about what would make a fight interesting. I wouldn't say I'm a good designer who tries make some popular system, but I think since I'm someone who has really practiced games for competition who has evolved into a casual gamer who plays with their friends in their free time, I can make something that's challenging, incites creativity, and trolls the player.
+When I was a UI engineer I focused a lot on working on our UI library and improving DX around how we specify constraints for layout and focus navigation in our scripting system (we had a JS VM so we ended up writing scripts with .TSX files by leveraging a  SolidJS custom renderer that called in to the native C++ UI framework functions).
+
+As a solo dev who has finished the bulk of the design, basic game loop, and custom tooling to build content for my game, most of my days are spent now debugging problems in the code. Unlike work where I did one thing and was able to give my UI work a bunch of love and maintenance I'm spread thin on my own game, and thus I'm relegated to debug or refactoring duty.
+
+Outside of game dev I'm not that interesting. I exercise, read programming books, write stories, and play mostly Dota 2 or some game with my friends.
 
 Here's some proof of my street cred. You won't see many players terrorizing people this bad in a regular match with a micro hero like Naga in Overthrow (Naga Siren is OP there but many people don't micro well). Also don't worry I only play Naga Siren before I program my game since Unbounded Perceptions requires some micro skills - i.e., I'm not ruining people's day by spamming something broken.
 
@@ -18,11 +22,25 @@ Here's some proof of my street cred. You won't see many players terrorizing peop
 
 You can also see in some of the videos I posted about game development that my youtube channel has old videos of competitive gaming videos on Blacklight Retribution that were made over 10 years ago. I'm sorry my voice never got deeper...
 
-I've been writing stories since I was in elementary school since I really enjoy it. I wish I could do it more but it's quiet time consuming cause I evolved from making many shorter stories to wanting to make one large good one. I think talking with AI has helped with my writers block but it takes a lot of work to perfect the dialog from the level of the collective ideas of AI to the standards I developed after writing and talking to some interesting people. I think I might have thousands of pages of ideas in conversations with ChatGPT but I've maybe only transcribed 100-200 pages of script that I would consider acceptable - and sometimes I even go back and revise them as I come up with better ideas.
+---
 
-Outside of game development my hobbies include playing Dota 2, watching Asian cinema (usually I watch stuff recommended by [this channel](https://www.youtube.com/@Asian_Movie_Enthusiast) or I find some stuff on MyDramaList) and listening to doujin music. I like listening to music so much I might've invested a bit too much money into IEMs. I have a custom Fir Rn6.
+I've been inspired to write stories ever since I played make-believe games with my sister and watched her write fanfiction. I think talking with AI has helped with my writers block but it takes a lot of work to perfect the dialog from the level of the collective ideas of AI to the level I am at today forged by watching a lot of movies and talking to a wide range of people. I think I might have thousands of pages of ideas in conversations with ChatGPT but I've maybe only transcribed 100-200 pages of script that I would consider acceptable - and sometimes I even go back and revise them as I come up with better ideas.
 
 ## About Unbounded Perceptions
+
+### Target Audience
+
+I think a lot of people who play Dota 2 tend to play that all day long. Occasionally if there's some big release a part of the community might stop for a while to play that new game but then come back to Dota 2. 
+
+I'm hoping my game fits in that mold but gathers more than just a few Dota 2 players.
+
+Dota 2 can feel like the biggest waste of time when your matches suck. But I'm sure everyone boots the game up time to time because there's that dream of having a game where you:
+
+1. Get to experience the trauma of Dota 2 psychology to really understand the depths of humanity. 
+2. Fight an extremely strategic battle of macro play where both teams communicate well.
+3. Really play to the limits of your hero and press buttons in a calculated way. This involves both teams having success or else you can turn off your brain and win.
+
+Up doesn't have too much to offer in terms of point 2, but I'm hoping with the deep story and some strategic enemy design and skill design we can offer 1 and 3.
 
 ### Game
 
@@ -56,6 +74,7 @@ You’re not expected to grind endlessly or build perfect characters. You can if
 But in higher difficulties your strength would only carry you so far. Instead you’re rewarded for reading situations, staying calm under pressure, and finding strategies that hold up under changing conditions.
 
 Boss fights are like moral puzzles wrapped in mechanics. Each encounter challenges how well you understand your team—not just their skills, but their role in the broader picture.
+
 There’s no “meta.” There’s only: what works here, and now? In the game this is reinforced by the characters you're allowed to use being switched up between missions.
 
 The game encourages you to think like Sephielle—not chasing power or perfection, but seeking clarity, consistency, and the strength to act even when the odds aren’t in your favor.
@@ -65,6 +84,20 @@ Over time, you’re not just watching characters evolve, hopefully you're evolvi
 You start out just trying to win fights, but as the story unfolds, and the mechanics challenge your assumptions, you start to internalize the philosophy behind the missions.
 
 It’s a story about judgment, responsibility, and what it really means to control your own fate—told not just in words, but through every decision you make on the battlefield.
+
+## Game Philosophy
+
+1. Make a game I would like to play one day
+2. Tell an interesting story that portrays some interesting perspectives on the world and hopefully boosts the creative IQ of someone who plays. Something like [Despiria](https://youtu.be/de-8Vz5Ng0A?si=nC69ojDE1z9fNgi-).
+    1. The story is episodic so we had to build some systems to kind of make levels dynamic. You visit a level for a "reason" and based on that "reason" the level changes how it looks. The reasons are things like ok well this place was visited by Bob at like Tuesday. Then you can revisit some place from Joe's perspective on like Saturday.
+    2. That whole system is tied together through the level picking system that was influenced by devil survivor.
+
+<img src="images/sidebyside.png" alt="side by side comparison with devil survivor"/>
+
+3. Really make the player suffer and troll them cause in Dota 2 you see people going OP builds too much in PVE. 
+    1. I want to leverage what I've seen there and make sure all types of players will suffer cause it'll be funny.
+    2. But honestly I want people to have to be creative in their gameplay too instead of just playing some ranged carry shooting from the backline or just kiting everything with spells.
+4. Be able to make every single interaction in Dota 2. But have a nicer way to build all the content needed for a PVE mode.
 
 </div>
 </main>

@@ -1,5 +1,4 @@
 import Main from "~/components/Main";
-import { createSignal } from "solid-js";
 import { A } from "@solidjs/router";
 
 <main class="m-2">
@@ -12,56 +11,29 @@ import { A } from "@solidjs/router";
 
 <Main />
 
-Hi it's Zi here. Welcome to my side I made with Solid-Start and MDX. My <A href="http://agitated-lalande-f97eb6.netlify.app">old site</A> (dunno if it's gonna be up forever) was made in Svelte 3 so I just had to like do some upgrades...
+>The only true death is betraying your purpose to preserve your image.
 
-Thanks to my pal Asim for teaching me how to make the site look ok in mobile. There's definitely more work to do but uhh yeah I have to like also do my own projects, study, take care of people, ya know everything you probably do better than me.
+Hi, it's Zi, a solo game dev here working on my game Up (**Unbounded Perceptions**). Welcome to my site I made with Solid-Start and MDX. My <A href="http://agitated-lalande-f97eb6.netlify.app">old site</A> (it'll probably stop working one day) was made in Svelte 3.
 
-I've been working on one game solo for the last around seven years on my free time. The concept you can see in the [game](/game) section, but it's inspired by stuff like ORPGs in WC3 and Siltbreaker in Dota. I call it a PETRPG aka a Party Episodic Tactical Role Playing RPG:
+Here's the normie elevator pitch description of Up: 
 
--Party - Micro up to 4 heroes at once, but the story involves a changing party requiring adapting to new playstyles and being creative with combat solutions (some reoccurring characters for a sense progression and some stability in playstyle).
--Episodic - Episodic story. Players aren't choosing episodes in order but different out of order episodes appear as the game progresses.
--Tactical - Focus on immediate strategy instead of macro. 
+>“Unbounded Perceptions is like Live A Live’s episodic story meets a Dota 2 PvE custom game — but slower-paced and strategic, where you control up to 4 heroes at once and every fight is about adapting your builds and figuring out a strategy with whatever cast of characters you have for an episode, not just dodging.”
 
->**If you want to read about how the systems in this game are built - from cutscene scripting to multiplayer dialog to AI and vision threading - check out the <A href="/technical docs">technical docs</A>  section. It covers architecture behind key features I implemented in C++, Blueprints, and AngelScript, with an emphasis on system design, narrative tooling, and player facing flexibility.**
+I also made up a new genre called **PETRPG** to help describe Up. 
 
->If you want a link to download the latest shipping build of the game it's on the  <A href="/downloads">downloads page</A>. Be warned it's kind of buggy and I'm slowly fixing UX and crashes in between studying.
-
-I've also worked professional in the games industry the last 4 years. The game was an third-person shooter MMO and I worked as UI Engineer typically on the UI framework like making core components, layout systems, focus navigation, animated gain/loss bars, etc.
-
-Occasionally I also built UIs from design specs like something similar to the marvel rivals healthbar, nameplates, or activity trackers.
-
-I enjoyed it very much. It was a grind working 8+ hours a day to take care of the UI framework but I enjoyed it so much and it developed the mentality I bring into my own game. There I learned to take care of a framework keep improving it and solve a bunch of tough problems to get little ounces of developer experience and user experience. But you know it's going to be worth it when you get to make a game and you can like deliver experiences on time even if you're going through a mental rough patch since you worked so hard to make the systems easy to use.
-
->You can see this inspiration in all tooling I created for my game. Every system has to be designed to be able to meet requirements first and foremost. But every tool must also be easy to use and have good validation such that I can watch streams while designing content and not worry about mistakes.
-
-Also I really enjoyeded all the time I got to spend working with my previous lead. He was cool and he was cooking hard (means he made some crazy ideas). Sometimes I didn't understand what he was saying even after hours of talking but hopefully I could be a good rubber duck for him. Eventually I just had to spend extra time after work to think about what he said, and hopefully I will reach his level one day.
-
->As a final note, I hope that even though the game got canceled the work I did gets ported to ESO one day and some addon creators can enjoy it.
+- Party: Control up to 4 distinct heroes in real-time. The story shifts your roster, forcing you to adapt to new team dynamics while still carrying forward familiar faces that you build up throughout the story.
+- Episodic: The narrative unfolds in branching episodes. The player has a list of events, and events from various points in time pop up as you progress or interact with things in the world. Each event might have different game modes and have a different set of the main characters interacting with side characters.
+- Tactical: I think strategy games have some element of macro play, like building a base and figuring out the best build to counter your opponent. In Up, there's still the decision-making of picking the best gear that protects against elements the enemy will use and finding the best skills to counterplay the enemy. But in general, you have to optimize for the next encounter you face instead of having to think long term.
 
 ---
 
-Besides programming I usually play RPG games. Stuff like Star Ocaen Second Story R, and Treasure of the Rudras. But my favorite game is probably Dota 2, and I play a decent amount of PVE custom games.
+This site is a hub for my work. Here are the most important links:
 
-I guess it's a good time to introduce my objectives with my game Unbounded Perception. You can find more about the core game loop [here](/game) I don't really care about making money with it, but I do want to:
+Check out the [game](/game) page if you're interested in reading about the core game loop and how it fits that PETRPG description I mentioned.
 
-1. Make a game I would like to play one day
-2. Tell an interesting story that portrays some interesting perspectives on the world and hopefully boosts the creative IQ of someone who plays. Something like [Despiria](https://youtu.be/de-8Vz5Ng0A?si=nC69ojDE1z9fNgi-).
-    1. The story is episodic so we had to build some systems to kind of make levels dynamic. You visit a level for a "reason" and based on that "reason" the level changes how it looks. The reasons are things like ok well this place was visited by Bob at like Tuesday. Then you can revisit some place from Joe's perspective on like Saturday.
-    2. That whole system is tied together through the level picking system that was influenced by devil survivor.
+Check out the <A href="/technical docs">technical docs</A> section if you want to read about how the systems in this game are built - from cutscene scripting to multiplayer dialog to AI and vision threading.
 
-<img src="images/sidebyside.png" alt="side by side comparison with devil survivor"/>
-
-3. Really make the player suffer and troll them cause in Dota 2 you see people going OP builds too much in PVE. 
-    1. I want to leverage what I've seen there and make sure all types of players will suffer cause it'll be funny.
-    2. But honestly I want people to have to be creative in their gameplay too instead of just playing some ranged carry shooting from the backline or just kiting everything with spells.
-4. Be able to make every single interaction in Dota 2. But have a nicer way to build all the content needed for a PVE mode.
-    1. I'd say I've managed to succeed in this front. Cause my scope is larger than Siltbreaker in terms of what our game can provide from a PVE standpoint, but it's also like the scope of the overall game is smaller since I built it in a way such that it's easier to create things but you don't have the flexiblity of like having enemies in multiple teams (at least not as easily).
-        1. For example AI logic in Dota is like a loop written in Lua. I really worked hard to setup nodes for our system to do things like follow players when you run out of vision all while minimizing the number of nodes you use in the graph. There are also custom nodes to react to events and break out of the traditional looping logic of the behavior tree or transition to new trees.
-
-By the way, the background for this
-site is made by a Japanese artist known as AriDuka. If the page is large
-enough, you can see the artist's id, but here's a link to their page:
-[AriDuka's Twitter](https://twitter.com/13033303?lang=en)
+Check out the [downloads](/downloads) page to download the latest development build of the game you can test.
 
 </div>
 
