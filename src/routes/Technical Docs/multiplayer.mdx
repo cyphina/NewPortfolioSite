@@ -1,7 +1,47 @@
 <main>
 <div class="m-2 mdx-content">
 
-# TODO
+# Retrofitting Multiplayer Into Up
+
+This article will discuss how I retrofitted a single player game with multiplayer capabilities. For context, my game Up is eventually meant to be player either single player or with a listen server. There's server validation but there's no intention to host dedicated servers so the player hosting the server can cheat. In a session you just play off the state of the server.
+
+## Motivations
+
+I remember the reactions I get when I told people: hey I started out making a single player game but I decided to make it multiplayer. A lot of people ignore the fact that I said that's what I did and just shoot straight to saying "that's really hard" or "that's not realistic".
+
+I get what they're saying ever since I got to work professionally on games. There it was important to identify design constraints up front and minimize risks to make sure we meet deadlines. 
+
+But in my own game I've never shyed away from huge refactors. The problem is I started this game as my passion but also to learn. And before working professionally I didn't emphasize the design phase. I knew about designing games and having ideas of what you want to make, but I would always just want to jump in the code instead of designing the program first.
+
+But I definately did not do that for this refactor. My last huge refactor where I split up my `Unit` base class into an interface caused me to not be able to run my game for a few months. The result of that was we can make your standard `Character` based unit that use a capsule for collision, but also units that are composites of various shapes.
+
+For this job we made a new git branch and spent time planning and learning before execution.
+
+I took that course from GameDev.tv on Udemy taught by Sam Pattuzzi maybe around 5 years ago. That course taught people how to use Epic's Online Subsystem to make a lobby based puzzle game and also how to make a racing game with network prediction. That was the first 24 hour course I've ever done...
+
+Thus I wasn't completely blind to how multiplayer games worked, but I feel like I needed more reps so I could be good at this for my job and also I knew this would be important to add to my game sooner than later.
+
+That's why I started this journey, and guides like [WizardCell's Blog](https://wizardcell.com/) have been the biggest help for me getting my multiplayer knowledge to the next level. Thank you so much for your blog there was a point in time I had all the info on lock. I've summarized the entire articles WizardCell wrote in my own notes to get a better grasp of them, but recently I'm mostly designing multiplayer systems and I don't have to go as deep as during this huge refactor I did 2 years ago. Thus I forgot a lot, but that guide is so good I go back to it just to make sure I consider multiplayer in any new system I design even if I'm not actively testing that 
+
+## Design
+
+The first thing to do was to design how the lobby based matchmaking would work for the game. To do that I kind of hard to redesign the game to what it is now.
+
+The world map is a whole playground where players can test out combinations of unlocked heroes and spawn arbitrary items and enemies
+
+<img src="../images/GameImagesInline/WorldMapPlayground.png" alt="World Map Playground"/>
+
+I thought players would join a session and end up in this level where you can play around but there's also UI to pick locations and then once someone has made a party member screen appears where you divy up the required heroes.
+
+<img src="../images/GameImagesInline/Party Picker.png" alt="Party Picker"/>
+
+I'm sure there's other systems I had to fundamentally redesign for multiplayer like interactions, unit ownership, etc. In fact I made a list of what I would redesign in order in my trello board. 
+
+<img src="../images/GameImagesInline/MultiplayerTrello.png" alt="Multiplayer Trello"/>
+
+For each item on the list there was a plan about what state we needed to propagate to clients and how we want to ensure we can handle populating it for cases like late joiners. For simple properties I'm using replication, whilst for more complex data like for quests and inventory I found it easier to just send over the data through RPCs and then make sure I handle late joiners by having clients request the data when they rejoin.
+
+## 
 
 </div>
-</main>
+</main> 
