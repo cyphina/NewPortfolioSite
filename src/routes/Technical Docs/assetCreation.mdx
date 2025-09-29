@@ -1,0 +1,36 @@
+<main>
+<div class="m-2 mdx-content">
+
+# Asset Creation
+
+>This will be a shorter article describing one of the things that helped productivity the most for my game.
+
+## Problem
+
+One thing I realized from my last job is to build one piece of content like an enemy, you typically have this split between static (def data) and dynamic data (things changing at runtime or things you might want to change up per enemy).
+
+This means you have to build one data asset, and then one blueprint. Sometimes you have to setup a link between the two.
+
+Filling in the static data and even data on the blueprint can be tedious. For blueprints you have a crazy amount of entries in your details view which you can simplify making custom detail views to hide unnecessary stuff. For your static data asset you also have some entries that are annoying to fill like `FText` fields where you need to remember the localization namespace and key conventions.
+
+There's also the problem of creating invalid data for the assets that make up your content. You can use some tools like trying to make fields inaccessible by overriding `CanEditChange` or using `IsDataValid`. But I think of those as your second layer of defense for making sure assets meet constraints as they're changed or as schemas change. The first layer is not even allowing people to make stuff with invalid data
+
+## Solution
+
+To fix these problems I built a validated asset creation menu. I think this puts the most important data and constraints that should be upheld at the forefront. It also makes prevents having invalid data at the start which is typically the case when you create assets the traditional way (through the blueprint menu or data asset creation menu), granted there are some workarounds like loading default values with construction helpers.
+
+I build my menu using AngelScript. I picked it up cause we were using it in my last job as the gameplay and eventually to power this visual scripting system for UIs (it was in a custom engine not Unreal).
+
+But I like it a lot in Unreal cause it's faster iteration than C++. I like the C++ syntax more probably cause I'm used to it but it is cool to be able to use VSCode to write AS which is comfy to me since in my last job I had both VS and VSCode open since I worked in C++ and TypeScript for that job:
+
+<img src="../images/GameImagesInline/CreationHelperCode.png" alt="Creation Helper Code"/>
+
+Here's a little video of what it looks like and me using it to create or edit item data using the creation helper widget:
+
+<video width="100%" controls>
+  <source src="../TestCreationHelper.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+</div>
+</main> 

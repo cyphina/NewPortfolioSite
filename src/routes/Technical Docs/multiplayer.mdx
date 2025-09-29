@@ -3,29 +3,30 @@
 
 # Retrofitting Multiplayer Into Up
 
-This article will discuss how I retrofitted a single player game with multiplayer capabilities. 
+This article will discuss how I retrofitted a single-player game with multiplayer capabilities. 
 
-For context, my game Up is eventually meant to be played either single player or with a listen server. In a session you play off the state/progress of the server.
+For context, my game Up is eventually meant to be played either single-player or with a listen server. In a session, you play off the state/progress of the server.
 
-There's server validation but there's no intention to host dedicated servers so the player hosting the server can cheat. Still the goal is to design things in with the best multiplayer practices so we do gate client only visual effects in dedicated server checks. 
+There's server validation, but there's no intention to host dedicated servers, so the player hosting the server can cheat. Still, the goal is to design things with the best multiplayer practices, so we do gate client-only visual effects in dedicated server checks. 
 
 ## Motivations
 
-I think the main motivators for trying to convert my game into a multiplayer game was learning and having more confidence in my capabilities as an engineer. I remember taking the really long Udemy class that showed you how to make a game with sessions using EOS and taught you how to make a racing game with networked prediction.
+I think the main motivators for trying to convert my game into a multiplayer game were learning and having more confidence in my capabilities as an engineer. I remember taking the really long Udemy class that showed you how to make a game with sessions using EOS and taught you how to make a racing game with networked prediction.
 
-I thought I had a decent grasp of how a multiplayer game works after that, but when I got a job working on an MMO I realized I needed more reps doing the basics I learned on that tutorial. I also found a really nice blog by [WizardCell](https://wizardcell.com/) which gave me a lot of motivation to learn. Thanks a lot to him/her/them cause it's so well written and showed you things you can't find easily online or even in these 24+h Udemy tutorials. Reading something like that motivates me to want to change up my whole game cause I only lock in information after writing things down and having made something in my game.
+I thought I had a decent grasp of how a multiplayer game works after that, but when I got a job working on an MMO, I realized I needed more reps doing the basics I learned in that tutorial. I also found a really nice blog by [WizardCell](https://wizardcell.com/) which gave me a lot of motivation to learn. Thanks a lot to him/her/them because it's so well written and showed you things you can't find easily online or even in these 24+ hour Udemy tutorials. Reading something like that motivates me to want to change up my whole game because I only lock in information after writing things down and having made something in my game.
 
-The last thing that contributed to me making this large redesign to the game was my past experience making large changes. At work I'm trying to be more risk adverse to meet deadlines, but in my own game I have had a history of having done massive refactors.  
+The last thing that contributed to me making this large redesign to the game was my past experience making large changes. At work I'm trying to be more risk-averse to meet deadlines, but in my own game I have a history of having done massive refactors.  
 
-The last huge refactor where I split up my `Unit` base class into an interface caused me to not be able to run my game for a few months (at least not on the branch I did the refactor). The result of that was we can make your standard `Character` based unit that use a capsule for collision, but also units that are composites of various shapes. The motivator for that was I wanted to make like a snake enemy made up of parts controlled by IK.
+The last huge refactor, where I split up my `Unit` base class into an interface, caused me to not be able to run my game for a few months (at least not on the branch I did the refactor). The result of that was we can make your standard `Character` based unit that uses a capsule for collision, but also units that are composites of various shapes. The motivator for that was I wanted to make, like, a snake enemy made up of parts controlled by IK.
 
-## Step 1 - The Plan
+## The Plan
 
-The design phase involved having to think about what it would take to make each system I built (basically all the systems I wrote articles for) work in a multiplayer setting. I thought about ok what information do we need on clients (typically stuff we're going to display). And then I thought about what information needs to be gated to be logic to only execute on the server.
+The design phase involved having to think about what it would take to make each system I built (basically all the systems I wrote articles for) work in a multiplayer setting. I thought
+what information do we need on clients (typically stuff we're going to display). And then I thought about what information needs to be gated to be logic to only execute on the server.
 
 Then for each system I also had to consider my existing implementation and how to move data properly across the core gameplay framework classes. I made a lot of gameplay framework class components like `GameStateComponents` or `PawnComponents` to move my data to based on what kind of data should be available to each client (stuff like if an owner should know about something versus each player) and if we needed data per player and known amongst the clients (like using a `PlayerState`) versus data that each client should see that we have one copy for the game (`GameState`).
 
-Looking over the systems helped me get a high level breakdown of what to make sure was working to consider a system "Multiplayer Done". So I created trello items for each system with multiple checkboxes. An example of a checkbox for my Item System is "Add Flow for Transferring Between Heroes" which we had previously but now we have to propagate changes to hero inventories of each player. Also if heroes are linked to separate pawns now we have to consider if we should let players swap items between only the heroes they own or if else we should have some way to have players block each other from just sending over items and spamming their inventories.
+Looking over the systems helped me get a high-level breakdown of what to make sure was working to consider a system "multiplayer done." So I created Trello items for each system with multiple checkboxes. An example of a checkbox for my item system is "Add Flow for Transferring Between Heroes," which we had previously, but now we have to propagate changes to hero inventories of each player. Also, if heroes are linked to separate pawns now we have to consider if we should let players swap items between only the heroes they own or if else we should have some way to have players block each other from just sending over items and spamming their inventories.
 
 <img src="../images/GameImagesInline/MultiplayerTrello.png" alt="Multiplayer Trello"/>
 
@@ -35,23 +36,23 @@ The previous iteration of Up involved the player getting transitioned from world
 
 The party would be changing as triggers in the world activated.
 
-The problem is for a multiplayer game there wasn't a good way to divy up who would control what heroes. And there was no flow to establish a group of players who you wanted to play with.
+The problem is, for a multiplayer game, there wasn't a good way to divy up who would control what heroes. And there was no flow to establish a group of players who you wanted to play with.
 
-To emulate the lobby based systems I had to invent the world map and the party picker.
+To emulate the lobby-based systems, I had to invent the world map and the party picker.
 
 <img src="../images/GameImagesInline/WorldMapPlayground.png" alt="World Map Playground"/>
 
-<img src="../images/GameImagesInline/Party Picker.png" alt="Party Picker"/>
+<img src="../images/GameImagesInline/PartyPicker.png" alt="Party Picker"/>
 
-The world map is a waiting area where players pick where to go next. While making a decision on what to do next in the game players can also test out combat strategies while they wait by spawning heroes or enemies. The heroes or enemies someone can spawn is limited by what they've come across so far, and this progress is synced between client and server by having clients query this information whenever they rejoin. But existing clients in the session just get delta updates.
+The world map is a waiting area where players pick where to go next. While making a decision on what to do next in the game, players can also test out combat strategies while they wait by spawning heroes or enemies. The heroes or enemies someone can spawn is limited by what they've come across so far, and this progress is synced between client and server by having clients query this information whenever they rejoin. But existing clients in the session just get delta updates.
 
-There's still lots of decisions to make here like how to handle people spam requesting to go into locations and how to handle players requesting to cancel the request to visit a specific location.
+There's still lots of decisions to make here, like how to handle people spam requesting to go into locations and how to handle players requesting to cancel the request to visit a specific location.
 
 ## Input/Server RPCs
 
-All the Server RPCs I made  are split up into multiple `PawnComponents` with the name `LiasonComponent` which is supposed to represent these components communicating on behalf on the player information about some kind of user input.
+All the Server RPCs I made are split up into multiple `PawnComponents` with the name `LiasonComponent` which is supposed to represent these components communicating on behalf of the player information about some kind of user input.
 
-We have liason components for the most standard RTS type input system we use. It has functions telling the server the client has requested an attack, to move units, to cast spells, etc. And it has logic to handle if the client has instead requested to queue this up.
+We have liason components (ok I just realize I've been spelling it wrong but bear with me) for the most standard RTS--type input system we use. It has functions telling the server the client has requested an attack, to move units, to cast spells, etc. And it has logic to handle if the client has instead requested to queue this up.
 
 There are also liason components from all the user interfaces where user input should trigger something to occur on the server. We have a `SlotLiasonComponent` to handle dropping items into slots, dropping items from the inventory, dropping skills into the skill wheel, etc. There's also a `DialogLiasonComponent` which is important to track where a player is in the dialog tree to validate their choices.
 
@@ -59,25 +60,25 @@ Since all these actions that result from user inputs control important gameplay 
 
 ## Data Propagation Strategies
 
-My go to data propagation strategy was replication. The declarative nature makes it easier to use for any simple properties and by that I mean it leads to less lines of code cause under the hood you get free support for late joiners whereas you have to create that flow for RPCs. The only extra function you make is typically something to broadcast a gameplay event when things replicate so that UI can update in the `ReplicatedUsing` callback, but you'd probably need something like this anyways for to notify UIs if you were using RPCs.
+My go-to data propagation strategy was replication. The declarative nature makes it easier to use for any simple properties, and by that I mean it leads to fewer lines of code because under the hood you get free support for late joiners, whereas you have to create that flow for RPCs. The only extra function you make is typically something to broadcast a gameplay event when things replicate so that UI can update in the `ReplicatedUsing` callback, but you'd probably need something like this anyway to notify UIs if you were using RPCs.
 
-Besides replicating data I also had to start consider what actors to replicate (to be able to spawn actors on server and client w/o having to explicitly call that) and sometimes what subobjects to replicate which just means we want to replicate at the object level instead of the actor level. I used this to replicate data about active quest goals which are stored in a `UActiveQuest` that store a current `UUpObjective` that has `UUpGoal` and you want to replicate the progress for information like how many enemies has been hunted so all players can see it for any active quest in the quest journal. 
+Besides replicating data, I also had to start considering what actors to replicate (to be able to spawn actors on the server and client without having to explicitly call that) and sometimes what subobjects to replicate which just means we want to replicate at the object level instead of the actor level. I used this to replicate data about active quest goals which are stored in a `UActiveQuest` that stores a current `UUpObjective` that has `UUpGoal` and you want to replicate the progress for information like how many enemies have been hunted so all players can see it for any active quest in the quest journal. 
 
-There was some data it was easier to I used slotted inventory which is stored in a `TSparseArray` mostly cause I wanted to learn what that data structure is about even if it's not optimal in terms of cache coherency
+There was some data RPCs were easier to use to sync data. This involves clients running some server RPC to request the most recent data when it rejoins. An example of this is my slotted inventory, which is stored in a `TSparseArray` mostly because I wanted to learn what that data structure is about. I kept it even if it's not optimal in terms of cache coherency since it doesn't store elements contiguously. It does make it faster to query if a slot is active or not...
 
-When it comes to replicating GAS information like the effect tags of units, we end up using the `Full` replication mode on the `AbilitySystemComponent` owned by the focused actor (cause that's the only time you would see information like all the effects on the status bar). Else we for most ASC's we're using the more efficient `Mixed` mode. That's why when you deselect the focused unit we set the replication mode back to `Mixed`.
+When it comes to replicating GAS information like the effect tags of units, we end up using the `Full` replication mode on the `AbilitySystemComponent` owned by the focused actor (because that's the only time you would see information like all the effects on the status bar). Else, for most ASCs, we're using the more efficient `Mixed` mode since it doesn't have to send all tag and effect data to  the client. That's why when you deselect the focused unit, we set the replication mode back to `Mixed`.
 
-One interesting approach I did for showing levels of abilities when you hover over them involves async tasks. Level information typically only exists on the server and instead of just querying the levels for all spells when a client connect I made it so when you hover over an ability slot you query that ability's level and it's cached on the client using RPCs under the hood.
+One interesting approach I did for showing levels of abilities when you hover over them involves async tasks. Level information typically only exists on the server, and instead of just querying the levels for all spells when a client connects, I made it so when you hover over an ability slot, you query that ability's level, and it's cached on the client using RPCs under the hood.
 
-I tried to emulate what this would look like in JS using unreal's task system to manage running async logic instead of using several callbacks.
+I tried to emulate what this would look like in JS using Unreal's `UE::Tasks::TTask` system to manage running async logic instead of using several callbacks.
 
 ## Results and Future Work
 
-So after all this work there was a point in time you could play Up with a listen server and client, have a server and client pick their party members, then spawn into the selected level and play the game. For the most part you would see data propagate and the systems worked decently even if the client would disconnect and reconnect. It's been like 2 years ago so I'm sure there were bugs from me forgetting to propagate some data to the client.
+So after all this work, there was a point in time you could play Up with a listen server and client, have a server and client pick their party members, then spawn into the selected level and play the game. For the most part, you would see data propagate, and the systems worked decently even if the client would disconnect and reconnect. It was like 2 years ago, so I'm sure there were bugs from me forgetting to propagate some data to the client.
 
-But nowadays I'm not actively testing the listen server configuration. I do design and build every system to propagate data I would display on clients through some mechanism. I still create Server RPCs for any kind of user initiated action like most recently I created a puzzle system and the user has to be able to place items on a pedestal and then select an option on a confirmation box to remove it which requires a flow that starts from a Server RPC.
+But nowadays I'm not actively testing the listen server configuration. I do design and build every system to propagate data I would display to clients through some mechanism. I still create server RPCs for any kind of user-initiated action, like most recently I created a puzzle system, and the user has to be able to place items on a pedestal and then select an option on a confirmation box to remove it, which requires a flow that starts from a server RPC.
 
-I use everything I learned before to design and program my systems, but there are a few bugs and I guess I'm trying to narrow down my scope in the sense that I'm focusing on at least releasing a good single player experience. And hopefully me spending more time on the design phases and considering multiplayer earlier on and even using Replication and RPCs to propagate data for these new systems even in my single player focused testing will make things sa lot easier than when I had to retrofit multiplayer from scratch.
+I use everything I learned before to design and program my systems, but there are a few bugs, and I guess I'm trying to narrow down my scope in the sense that I'm focusing on at least releasing a good single-player experience. And hopefully me spending more time on the design phases and considering multiplayer earlier on and even using replication and RPCs to propagate data for these new systems, even in my single-player-focused testing, will make things a lot easier than when I had to retrofit multiplayer from scratch.
 
 </div>
 </main> 
