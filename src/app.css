@@ -203,6 +203,19 @@ pre {
   font-size: 0.95em;
 }
 
+/* Code blocks (fenced with ``` ) */
+.mdx-content pre code {
+  display: block;
+  background-color: #2d2d2d; 
+  color: #f8f8f2;
+  margin-bottom: 0.5em;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
 p {
   margin-bottom: 0.5rem;
 }

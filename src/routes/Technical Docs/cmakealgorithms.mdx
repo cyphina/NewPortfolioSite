@@ -1,7 +1,130 @@
 <main>
 <div class="m-2 mdx-content">
 
-Will fill this out later...
+This is the simple setup I use to practice algorithms across my computer (a Windows machine) and my laptop which uses Arch Linux.
+
+CMake is the buildsystem generator, and on Windows I typically program in Visual Studio while on Arch I program in VSCodium.
+
+Here's the folder structure
+
+- `CMakeLists.txt`
+- /src
+    - `CMakeLists.txt`
+    - /core - Code providing code reused throughout implementing different algorithms (e.g., `matrix.h/cpp`) 
+    - /problems
+        - CMakeLists.txt
+        - cpp files that make executable targets to test each algorithm, (e.g., `snowflakeProblem.cpp`)>
+    - all algorithm folders, (e.g., `sorting.h/cpp`)>`
+- /test
+    - `CMakeLists.txt`
+    - cpp files to to put tests that go into our CTest testing target, (e.g., `testSorting.cpp`)
+
+This lets you create a library with all the reusable core and algorithm code you can use in your tests but also your executable targets where you can create console applications to solve problems that use the various algorithms.
+
+---
+
+Here are the list files. Because of the techniques used you have to rerun `cmake -B build` each time you add new files. And if you add new folders you need to add it to the CMakeLists in a similar fashion to the other folders (e..g, `graph/*.cpp`).
+
+In `src`:
+
+```
+file(GLOB_RECURSE ALGO_SOURCES CONFIGURE_DEPENDS
+    graph/*.cpp
+    sorting/*.cpp
+    divideAndConquer/*.cpp
+    core/*.cpp
+    misc/*.cpp
+    tree/*.cpp
+)
+
+file(GLOB_RECURSE ALGO_HEADERS CONFIGURE_DEPENDS
+    graph/*.h
+    sorting/*.h
+    divideAndConquer/*.h
+    core/*.h
+    misc/*.h
+    tree/*.h
+)
+
+# Combine all source files
+set(ALL_ALGO_FILES ${ALGO_SOURCES} ${ALGO_HEADERS})
+
+# Generate Visual Studio filters based on folder structure
+foreach(_file IN LISTS ALL_ALGO_FILES)
+    get_filename_component(_dir "${_file}" PATH)
+    file(RELATIVE_PATH _group "${CMAKE_SOURCE_DIR}" "${_dir}")
+    string(REPLACE "/" "\\" _group "${_group}")
+    source_group("${_group}" FILES "${_file}")
+endforeach()
+
+add_library(sut STATIC ${ALGO_SOURCES})
+
+target_sources(sut PRIVATE ${ALGO_HEADERS})
+
+# compiler has rules on include lookup but we need to extend it to use our target paths
+target_include_directories(sut PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# use after we defined sut
+add_subdirectory(problems)
+```
+
+In `src/problems`
+
+```
+# generate the executables for each problem in the problems folder
+# so we can test with user inputs
+
+file(GLOB_RECURSE PROBLEM_SOURCES CONFIGURE_DEPENDS *.cpp)
+
+foreach(problem_src ${PROBLEM_SOURCES})
+    # Get the filename without the directory or extension
+    get_filename_component(problem_name ${problem_src} NAME_WE)
+
+    set(projectName "Problem${problem_name}")
+
+    # Create an executable with that name
+    add_executable("${projectName}" ${problem_src})
+
+    # Link the sut library
+    target_link_libraries("${projectName}" PRIVATE sut)
+endforeach()
+```
+
+In `test`
+
+```
+include(FetchContent)
+FetchContent_Declare(Catch2 GIT_REPOSITORY https://github.com/catchorg/Catch2.git GIT_TAG v3.4.0)
+FetchContent_MakeAvailable(Catch2)
+
+file(GLOB_RECURSE ALGO_SOURCES CONFIGURE_DEPENDS
+    cppFeatures/*.cpp
+    divideAndConquer/*.cpp
+    graph/*.cpp
+    sorting/*.cpp
+    core/*.cpp
+    misc/*.cpp
+)
+
+# Generate Visual Studio filters based on folder structure
+foreach(_file IN LISTS ALGO_SOURCES)
+    get_filename_component(_dir "${_file}" PATH)
+    file(RELATIVE_PATH _group "${CMAKE_SOURCE_DIR}" "${_dir}")
+    string(REPLACE "/" "\\" _group "${_group}")
+    source_group("${_group}" FILES "${_file}")
+endforeach()
+
+add_executable(unit_tests ${ALGO_SOURCES})
+
+target_link_libraries(unit_tests PRIVATE sut Catch2::Catch2WithMain)
+
+# When we call `include` we need to make sure this path is in the list of directories to search.
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
+# Reference other script files or modules.
+include(Catch)
+# Runs test binary once at configure time with --list-tests. Parses list of test cases. Registers each with `add_test()` in CMake.
+catch_discover_tests(unit_tests)
+```
 
 </div>
 </main>
