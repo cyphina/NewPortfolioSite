@@ -12,19 +12,27 @@ import { A } from "@solidjs/router";
 
     # Instructions/Testing
 
-    I haven't put much effort in terms of FTUE. The best explanation I can give about how to play is you control like your typical Dota 2 game (you can make control groups with CTRL + 1 2 or 3 and add units to control groups with Shift + 1 2 or 3) but there are several menus that only open when you select on a unit and press a button (if you select multiple it opens those menus using the first unit as context). 
-    
+    ## Instructions
+
+    I haven't put much effort in terms of FTUE. The best explanation I can give about how to play is you control like your typical Dota 2 game (you can make control groups with CTRL + 1 2 or 3 and add units to control groups with Shift + 1 2 or 3) but there are several menus that only open when you select on a unit and press a button (if you select multiple it opens those menus using the first unit as context).
+
     If you select a unit you see a HUD appear. That HUD also has some buttons you can use to open up menus like equipment for the unit, inventory, stats, etc.
 
-    If you pan you camera super far you can double tap a control group to move it back to a unit. If you can't click on the unit you can also deselect everything by clicking on the ground then press tab which will cycle through selecting heroes in order of their party position. Then you can make a control group with the selected unit and then double tap it to move the camera back. 
-    
+    If you pan you camera super far you can double tap a control group to move it back to a unit. If you can't click on the unit you can also deselect everything by clicking on the ground then press tab which will cycle through selecting heroes in order of their party position. Then you can make a control group with the selected unit and then double tap it to move the camera back.
+
     You can also click on the sidebar UI circular portrait outlines to move the camera back to the hero associated with the character portrait.
 
-    I'll try to make a strategy guide type thing later. I'd want to work on before FTUE because I would want to spend more time design the FTUE system to emulate Star Ocean Second Story R. 
-    
-    In that game when you unlock a tutorial there's a nice place you can revisit to see all the tutorials you've unlocked in the past.
+    I'll try to make a strategy guide type thing later with better explanations nad pictures. I'm biased cause I spend my money buying strategy guides for games on ebay cause they look cool but it would have the information with some nice looking pictuers.
 
-    Press B to open the break menu and you can access the key remapping menu which gives you the latest information on all the current keybinds.
+    I'd want to work on fleshing out the guide before FTUE because I would want to spend more time designing the FTUE system to emulate Star Ocean Second Story R.
+
+    >In that game when you unlock a tutorial there's a menu that has a collection of all the unlocked tutorials neatly organized.
+
+    As for the keybinds - press B to open the break menu and you can access the key remapping menu which gives you the latest information on all the current keybinds. 
+    
+    >I had a button on the bottom left of the HUD that used to list out the keybinds, but it wasn't dynamic unlike the actual keybind menu (which updates when you update your binds). 
+    >
+    >And thus that old menu at the bottom left is out of date and I'll probably replace it with something.
 
     ## Up Commands
 
@@ -35,19 +43,23 @@ There's probably many commands I forgot to write down here but a lot of importan
 Some commands requires some kind of gameplay tag. I'll put a link to the list somewhere.
 
 ### General
+
 `Up_TeleportUnit(UnitTypeTag, X, Y, Z)` - Teleports a unit to a specific position or if you don't pass anything for X Y and Z then it teleports to the ground spot obtained from tracing a ray in the direction of the camera.
 `Up_TeleportSelectedUnitsToCursor` - Teleports selected units to the location under the cursor.s
 `Up_GotoWorldMap` - Teleports you back to the world map.
 
 ### Cutscenes
+
 `Up_OverrideSpeedOfUnitType "WorldObject.Hero.Cyphina" 100` - Lets you override the movement speed of some kind of unit.
 
 ### Editor
-`UpLogsOnly` - Shows only logs from our various Up categories (ones starting with Up_*). We need to update this list in `FMyProjectEditorModule::ShowOnlyUpLogs` if we have new log categories since it's a manual list.
+
+`UpLogsOnly` - Shows only logs from our various Up categories (ones starting with Up\_\*). We need to update this list in `FMyProjectEditorModule::ShowOnlyUpLogs` if we have new log categories since it's a manual list.
 
 It also forces the game to clear logs in PIE.
 
 ### Moving
+
 `Up_ShowPaths 1` - Can help debug pathfinding. It draws out the paths and some movement vectors.
 `Up_UsePartialPaths` - Activate/Deactivate partial paths.
 
@@ -65,53 +77,58 @@ It also forces the game to clear logs in PIE.
 `Up_QuestStopTrack` - Stops tracking a quest.
 `Up_QuestFinishSubgoal QuestName.MainStory.CleaningEvernaWater 0` - Finishes some subgoal of any quest even if it's not tracked.
 `Up_QuestFinishPrimarySubgoal GoalIndex bReturnToWorldMap` - For the currently tracked quest, will finish a goal of index `GoalIndex` and returns to world map if the second parameter is true.
-`Up_QuestFinish QuestNameTag` - Finishes a quest. 
+`Up_QuestFinish QuestNameTag` - Finishes a quest.
 `Up_QuestAddAndStartTracking` - Shorthand for adding a quest and starting to track it if in the location associated with the quest objective that you would be on when starting the quest.
 `Up_QuestAdd` - Add a quest. Can now access the location associated with starting objective in the world map.
 
 ### Level Transitions
 
 ### E2E Testing
+
 `Up_SetupTestScenario` is a command that you can run from `RTS_Level_WorldMap` to test out some basic flows like gaining quests and transitioning to levels as you progress the quest. It does a lot of setup behind the hood like setting up the next story chapter, etc. It also turns off the "Unlocking" gate which means you can spawn all heroes and items in the playground.
 
->If you want to use the location list at all you need to run this command or use `ConsoleVariablesEditor::SetConsoleVariableByName_Bool("net.AllowPIESeamlessTravel", true)` else expect some quest data like objectives to be null since the game state will be destroyed and recreated.
+> If you want to use the location list at all you need to run this command or use `ConsoleVariablesEditor::SetConsoleVariableByName_Bool("net.AllowPIESeamlessTravel", true)` else expect some quest data like objectives to be null since the game state will be destroyed and recreated.
 
->When doing standalone testing in a world not accessed through the world map we want to use the node `SetupNonWorldMapStartingPoint`.
+> When doing standalone testing in a world not accessed through the world map we want to use the node `SetupNonWorldMapStartingPoint`.
 
 ### AI
-* `Up_AiUpdateInterval` - Updates how often behavior tree components and ai logic loops update for Units. Internally this actually just affects the delay between query actions, but it doesn't work for other types of tasks.
-* `Up_EnableEnemyAI` - Starts/stops all behavior tree
-* `Up_ToggleEnemyAI` - Toggles enemy ai on/off.
-* `Up_TogglePauseEnemyAI` - Toggles enemy ai paused/resumed.
-* `Up_Debug_EnableEnemyControl` - Enables enemy control. You can click on an enemy and tell it what to do which stops its AI and basically lets you control it like an allied unit.
-* `Up_Debug_DamageValues` - Used to log calculations done by the damage system.
-* `Up_SeeAll` - Essentially disables the vision system.
-* `Up_DrawLeashSpheres` - Draws spheres showing leash component data.
-* `Up_Debug_DrawTargeting` - Draws a sphere at every unit's target location. Alo draws some things related to chase.
-* `tracetag Up_AIChase` - Draws some debug information about AI chases.
-* `Up_LogAsyncSteps` - Logs all action steps taken. If you want to see info for a specific enemy use the output log filter.
+
+- `Up_AiUpdateInterval` - Updates how often behavior tree components and ai logic loops update for Units. Internally this actually just affects the delay between query actions, but it doesn't work for other types of tasks.
+- `Up_EnableEnemyAI` - Starts/stops all behavior tree
+- `Up_ToggleEnemyAI` - Toggles enemy ai on/off.
+- `Up_TogglePauseEnemyAI` - Toggles enemy ai paused/resumed.
+- `Up_Debug_EnableEnemyControl` - Enables enemy control. You can click on an enemy and tell it what to do which stops its AI and basically lets you control it like an allied unit.
+- `Up_Debug_DamageValues` - Used to log calculations done by the damage system.
+- `Up_SeeAll` - Essentially disables the vision system.
+- `Up_DrawLeashSpheres` - Draws spheres showing leash component data.
+- `Up_Debug_DrawTargeting` - Draws a sphere at every unit's target location. Alo draws some things related to chase.
+- `tracetag Up_AIChase` - Draws some debug information about AI chases.
+- `Up_LogAsyncSteps` - Logs all action steps taken. If you want to see info for a specific enemy use the output log filter.
 
 ### Combat
-* `Up_RefreshSpells` - Refreshes cooldowns for all units.
-* `Up_BuffAllHeroesStats` - Makes all heroes have really high stats.
-* `Up_ShowSpellHitboxes` - Used for debugging gameplay effect volumes.
-* `Up_DamageUnit` - Can some named unit with a damage amount. Should ignore all damage calculation stuff.
-* `Up_ShowSpellHitboxes` - Draws hitboxes for spells (basically draws them for `AGameplayAbilityTargetActor` when using `WaitTask` in abilities).
-* `Up_Debug_SpawnInformation` - Draws information about spawners.
+
+- `Up_RefreshSpells` - Refreshes cooldowns for all units.
+- `Up_BuffAllHeroesStats` - Makes all heroes have really high stats.
+- `Up_ShowSpellHitboxes` - Used for debugging gameplay effect volumes.
+- `Up_DamageUnit` - Can some named unit with a damage amount. Should ignore all damage calculation stuff.
+- `Up_ShowSpellHitboxes` - Draws hitboxes for spells (basically draws them for `AGameplayAbilityTargetActor` when using `WaitTask` in abilities).
+- `Up_Debug_SpawnInformation` - Draws information about spawners.
 
 ### Visualizations
-* `Up_DrawMarkerAtPoint` - Lets us draw a sphere at some location.
-* `Up_DrawMarkerAtPointString` - Version that lets us just paste in output from visual studio like (you need to add quotes for some reason though) - `"{X=853.63168604529312 Y=-415.33435698723883 Z=-5.8798887039301917e-06}"`
-* `Up_ShowBoxesOnUnits` - Lets us draw AABB boxes around all units even if they are hidden. Also draws a sphere at their actor position (which should be their feet - fix if not).
+
+- `Up_DrawMarkerAtPoint` - Lets us draw a sphere at some location.
+- `Up_DrawMarkerAtPointString` - Version that lets us just paste in output from visual studio like (you need to add quotes for some reason though) - `"{X=853.63168604529312 Y=-415.33435698723883 Z=-5.8798887039301917e-06}"`
+- `Up_ShowBoxesOnUnits` - Lets us draw AABB boxes around all units even if they are hidden. Also draws a sphere at their actor position (which should be their feet - fix if not).
 
 ## Unreal Commands
 
 ### Input Testing
+
 `showdebug Input` - Lets us view the input stack (highest is low priority). Yellow color means component processes and handled input but does not consume it. Red means component consumes input and stops propagating.
 `showdebug enhancedinput`
 `Up_Debug_PrintMouseHover` - Prints name of whatever the mouse is hovering over.
 
+> Typically we'll see our pawn missing from the stack if input isn't working.
 
->Typically we'll see our pawn missing from the stack if input isn't working.
   </div>
 </main>
