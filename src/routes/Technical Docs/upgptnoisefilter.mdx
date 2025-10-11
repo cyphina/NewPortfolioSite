@@ -1,0 +1,95 @@
+import { A } from "@solidjs/router";
+
+<main>
+<div class="m-2 mdx-content">
+
+# Up GPT Noise Filter
+
+## Overview 
+
+>Code is <A href="https://gitlab.com/uperception/upgpt-noise-filter">Here</A>
+
+I built a custom ChatGPT frontend about 2 years ago. I realized the API has evolved a bit since then and this I had to fixup the backend to get it working again to take some video footage.
+
+The entire project was made in React and NodeJS. For components I used libraries like React Spectrum. That's my favorite component library. When I was creating components for the canceled game I worked on, I would use that library as a reference for a good prop interface that considered accessibility features.
+
+The NodeJS backend was in charge of parsing files on the users PC. In a .env file you provided things like an OpenAI API Key and a path to a folder containing story documents (structured like an Obsidian Knowledge Base).
+
+>Nowadays I don't use obsidian just VSCodium and extensions like Foam. I like Obsidian it's just IT got mad when I used it at work. And I feel like it's pretty convenient to use my JS/TS code editor to write notes as well.
+
+Based on the files it parsed it would create keywords you could use to quickly paste summaries of your story content in the chat. For example I had a story like 
+
+<img src="../images/GameImagesInline/StoryCodium.png" alt="Story Outline"/>
+
+## Problem
+
+In 2023 I had been writing really long stories in the official ChatGPT app. I think back then the context window for ChatGPT 3 was something like 4k tokens.
+
+I would keep having to remind ChatGPT over and over again with summaries. And the app was of course quite slow cause it didn't virtualize any of the messages sent so the UI would take a long time to update and chats would take a long time to load.
+
+Thus I decided to create this app and I wanted the ability to be able to quickly post summaries on some of the topics in the chat.
+
+I had been tracking the core ideas of the story in my own Obsidian Notebase where I kept various topic summaries. I knew the app should at a minimum be able to reference a topic by writing it in brackets (e.g., `[Topic]`) and the app should automatically paste the summaries.
+
+But I also wanted it to be able to track what information was already in the context windows so if I had to refer to the topic again it wouldn't paste the entire summary if that summary was already in the context window to save me some tokens.
+
+## Features
+
+### Summary Pasting with Token Tracking
+
+The application not only pastes summaries of any topics you name in brackets, but since it's designed to read Obsidian notes it will look for any linked topics (in the markdown files these are linked pages via `[[]]`) and post those too.
+
+Here's what that looks like:
+
+<video width="100%" controls>
+  <source src="../TokenDemo.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+The Monaco code editor is what we use to write prompts and it also shows us a list of all the topics in the completion tooltip to help remind us what topics are available!
+
+---
+
+The way this works is at the start of the app we store the summaries in a mapping of topic keyword to summary. We count how many tokens each summary takes up plus we track how many tokens it's been since we first referenced the topic to be able to know if the entire summary is in the context window.
+
+We also do this for all the linked topics. And we have to update the tracking whenever we shift the context window (add new messages or delete them).
+
+### Save/Loading
+
+In our save file we store information about each message the state of the topic cache so you can resume the token saving effects. Here's what reloading looks like:
+
+<video width="100%" controls>
+  <source src="../SaveLoadUpGptNoise.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+You can see that we have saved the last usage of some keywords since information about how long ago it appeared in the count of total token usage is shown in the autocomplete popup.
+
+Info about the keyword `[Sephielle` will be repopulated since it's outside the context window from the resume point of our work. But technically it isn't with the new GPT 5 models. I made this a while back as you can see from the dates recorded from these messages. Back then the context window was less than 4k which is why it's outside of the context window... The reload feature probably needs to learn how to account with this kind of model parameter change...
+
+### Presets
+
+The different preset buttons just changes the system prompt that is always sent at the top of our chat conversation. This can be used to control what kind of feedback you're looking from ChatGPT.
+
+### Virtualized Entries
+
+Because this app had a pretty niche storytelling use the message entries are simple. It's all just text which we measure before adding new entries to the screen to make sure we can provide our virtualized lists with accurate heights and widths it can use.
+
+We render the text to an invisible fixed position label that's to prevent the label from impacting layout. 
+
+To make sure the text width matches what it would be on the screen we query the current width of the list when calculating the text height. 
+
+>Our list only virtualizes in one direction and it's width is stable such that if we overflow in the width direction we'll use `overflow scroll`.
+
+With that setup all we have to do is get the text height to use in the virtualized list. And the result is the app is quicker cause we're only rendering few number of entries at a time. Granted if you want to search the entire history you have to export the chat first to text and search that.
+
+## Future Work
+
+I'm inspired to work on it again seeing the new things in the OpenAI API. I want to explore trying to setup projects or fine tuning.
+
+I have a script I use to generate 5 main files out of all the separate story markdown files.
+
+It's doing work akin to a linker creating an executable. But the output is like 5 large files that have all the combined story content. I feed this into an OpenAI project for context, but trying to do something similar with the API for my own story writing app would make it very nice since the app is just a lot faster and less bloated than the official one.
+
+</div>
+</main>
