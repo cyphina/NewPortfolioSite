@@ -1,0 +1,146 @@
+import { A } from "@solidjs/router";
+
+<main>
+<div class="m-2 mdx-content">
+
+# Up UI Features
+
+## Overview
+
+Our game Unbounded Perception (Up) has a lot of UIs in the game and editor side that might be interesting to see since they're designed around having to manage up to 4 heroes. Here I'll just talk about some of the things I built.
+
+As a disclaimer I spent most of my professional career as a UI engineer. My art sucks, but also I try to not spend as much time working on UI in my own projects since...
+
+But when I do work in UI or tooling the main focus is typically UX/DX.
+
+Here's an overview of some UIs I made. There's a lot more here's the ones I think are the most interesting.
+
+## Asset Creation Helper
+
+This is a menu I made that lets you create pretty much every piece of content in the game without having to know what blueprints and data assets you need.
+
+It also has some basic data validation and it has prefilled data like it will handle generating localization namespaces and keys for based on the names you provide.
+
+<video width="100%" controls>
+  <source src="../uivideos/AssetCreationHelper_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## D3 Graph
+
+Here's a UI where we have a browser that shows graph information of a unit's stats through the D3js library:
+
+<video width="100%" controls>
+  <source src="../uivideos/D3Graph_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Event Flag Tester and Visualizer
+
+Here's a UI made in slate that lets you test gameplay flags that act as flags for game events. You can save load flags from reading from a JSON file and there's also showcase of some visualizer components to help determine what actors are driven by event flags.
+
+<video width="100%" controls>
+  <source src="../uivideos/EventFlagTesterAndVisualizerComps_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Event Tester
+
+Here's another slate UI that tracks all `UObject`'s of type `URTSEvent` which let us run logic in reaction to something occuring:
+
+<video width="100%" controls>
+  <source src="../uivideos/EventTester_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Paged Inventory
+
+Here's an inventory where you can manage up to four heroes items and transfer money and items between them:
+
+<video width="100%" controls>
+  <source src="../uivideos/PagedInventory_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Quest Details
+
+Here's a custom details panel to make some quests. It leverages the natural structure of the quest UObject's and the composite pattern to contain them within each other. The custom details just tries to space and organize fields better. It also color codes some fields.
+
+The custom quest details also has some custom views for quest objectives. There's a dropdown that lets you pick the `NextObjective` which is a dropdown of all the guids of objectives in the quest. Basically when you finish any goal it could lead to a different objective (this is how quests branch).
+
+<video width="100%" controls>
+  <source src="../uivideos/QuestDetails_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Quest List
+
+The quest list is a tree view to handle some quest objective with a huge number of steps. 
+
+Any kind of goal associated with a location has a little button before the goal description which you can use to track the quest. It draws a marker on the actor associated with the quest goal and when it's off screen. It draws the marker 
+
+<video width="100%" controls>
+  <source src="../uivideos/QuestList_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Rebindable Key Menus
+
+Here's the rebindable key menu I had to remade after switching from input to enhanced input. Made in C++ and also features a system to broadcast remapping so that other labels that show keybinds like in the action bar can show the updated keys:
+
+<video width="100%" controls>
+  <source src="../uivideos/RebindableKeyMenu_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Spellbook Tree Layout
+
+Here's a custom tree layout algorithm used to build trees visuals for each of the character's different skill trees. And there's also a custom slate composite widget that provides a menu you can pan around the constrained view of the tree:
+
+<video width="100%" controls>
+  <source src="../uivideos/TreeSpellbook_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Trigger Manager
+
+Here's the slate menu I based the event testing menu mentioned above off of. But this one handles objects of type `URTSTrigger` and it has more features like a interface to create new triggers and filter what triggers are shown. I also click around to show how this lets you navigate to the outer objects that contain the triggers.
+
+Need to probably limit the triggers to those in an active level by default...
+
+<video width="100%" controls>
+  <source src="../uivideos/TriggerManager_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Unit Custom Details
+
+A custom details panel I made for editing `Unit` type blueprints. Has some nice buttons to help take you to various unit related assets, and also we try to hide lots of categories that most unit creators wll not be changing.
+
+<video width="100%" controls>
+  <source src="../uivideos/UnitCustomDetails_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Unit in World Debugger
+
+A UI that has a virtualized list with entries that describe information about all alive units in the world. And also has some utility buttons to do stuff like select those units in the editor, clear status effects, etc.
+
+The list properly updates as we start or end PIE.
+
+<video width="100%" controls>
+  <source src="../uivideos/UnitInWorldDebugger_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+## Playground Menu
+
+Another virtualized list where it loads up all primary assets of various types to let players spawn different types of enemies, heroes, and items (if they've seen them once before):
+
+<video width="100%" controls>
+  <source src="../uivideos/VirtualizedPlayground_noaudio.mp4" type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+</div>
+</main>
