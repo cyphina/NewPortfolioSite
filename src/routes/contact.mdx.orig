@@ -1,0 +1,18 @@
+import { A } from "@solidjs/router";
+
+<main>
+  <div class="m-2 mdx-content">
+    # Contact Zi Ha At...
+    <address>
+        1. For friendly chat - cyphina@gmail.com
+        2. For something business oriented - z.nam.ky.ha@gmail.com
+        3. For something you want me to see 100% - ping `cyphinalyena` on Discord Launcher
+        4. My code samples are:
+            1. [Github Link](https://github.com/cyphina/)
+                1. My RTS project I have there is super out of date. I have updated the code using what I've learned from working in games the last 5 years. 
+                2. Since I work really hard on it I moved it to a private repo to prevent it from being stolen or used for AI.
+            2. Project I work on practicing C++ outside of Unreal Engine by solving various algorithm problems is here: [Gitlab Link](https://gitlab.com/z.nam.ky.ha-group)
+            3. [UpGPTNoiseFilter Tool I made in React/NodeJS](https://gitlab.com/uperception/upgpt-noise-filter). The accompanying technical document on the site is <A href="/technical docs/upgptnoisefilter">here</A>             
+    </address>
+  </div>
+</main>
